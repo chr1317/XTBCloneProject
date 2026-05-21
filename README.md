@@ -1,11 +1,22 @@
-# XTBCloneProject
+# XTB Clone Project
 
+## Requirements
 
-#Run Backend
-Run Xampp or other database program
+- .NET 8 SDK
+- XAMPP / MySQL
+
+## Run backend
+
+```bash
 cd Backend/XTBCloneAPI
+
 dotnet restore
 dotnet ef database update
 dotnet run
+```
 
+Swagger:
+
+```txt
 https://localhost:xxxx/swagger
+```
