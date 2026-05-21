@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+
+# VS Code
+.vscode/
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# User files
+*.user
+*.suo
+
+# Environment
+.env
+
+# Uploads
+uploads/
+
+# Node
+node_modules/
+
+# Mac/Linux
+.DS_Store
