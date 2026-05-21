@@ -1,0 +1,26 @@
+﻿<div class="navbar">
+  <div class="left">
+    <div class="brand">
+      <span class="brand-name">XTB Clone</span>
+      <span class="brand-tag">dashboard</span>
+    </div>
+
+    <nav>
+      <a routerLink="/dashboard">Dashboard</a>
+      <a [routerLink]="primaryLink">{{ primaryLabel }}</a>
+    </nav>
+  </div>
+
+  <div class="right" *ngIf="isLoggedIn; else guestView">
+    <div class="avatar">{{ initials }}</div>
+    <div class="user-info">
+      <span class="user-name">{{ userName }}</span>
+      <span class="user-role">{{ roleLabel }}</span>
+    </div>
+    <button class="logout-button" (click)="logout()">Logout</button>
+  </div>
+
+  <ng-template #guestView>
+    <a routerLink="/login" class="login-link">Login</a>
+  </ng-template>
+</div>

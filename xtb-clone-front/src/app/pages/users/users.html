@@ -1,0 +1,50 @@
+<div class="users-page">
+
+  <header class="top">
+    <h1>Users</h1>
+    <button (click)="addUser()">+ Add user</button>
+  </header>
+
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Imię</th>
+        <th>Nazwisko</th>
+        <th>Email</th>
+        <th>Rola</th>
+        <th>Akcje</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let user of users">
+        <td>{{ user.id }}</td>
+        <td>
+          <input *ngIf="editUser?.id === user.id" [(ngModel)]="editUser!.firstName">
+          <span *ngIf="editUser?.id !== user.id">{{ user.firstName }}</span>
+        </td>
+
+        <td>
+          <input *ngIf="editUser?.id === user.id" [(ngModel)]="editUser!.lastName">
+          <span *ngIf="editUser?.id !== user.id">{{ user.lastName }}</span>
+        </td>
+
+        <td>
+          <input *ngIf="editUser?.id === user.id" [(ngModel)]="editUser!.email">
+          <span *ngIf="editUser?.id !== user.id">{{ user.email }}</span>
+        </td>
+
+        <td>{{ user.role }}</td>
+
+        <td class="actions">
+          <button (click)="startEdit(user)">Edit</button>
+          <button (click)="deleteUser(user.id)">Delete</button>
+          <button *ngIf="editUser?.id === user.id" (click)="saveUser()">Save</button>
+        </td>
+      </tr>
+    </tbody>
+
+  </table>
+
+</div>
