@@ -1,0 +1,6 @@
+@XTBCloneAPI_HostAddress = http://localhost:5128
+
+GET {{XTBCloneAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
