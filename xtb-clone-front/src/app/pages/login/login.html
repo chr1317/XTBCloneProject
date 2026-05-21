@@ -1,0 +1,43 @@
+<div class="login-container">
+
+  <div class="login-card">
+
+    <div class="logo">
+      XTB Clone
+    </div>
+
+    <div class="subtitle">
+      Platforma tradingowa
+    </div>
+
+    <div class="input-group">
+      <label>Email</label>
+      <input
+        type="email"
+        [(ngModel)]="email"
+        placeholder="admin@test.com"
+      >
+    </div>
+
+    <div class="input-group">
+      <label>Hasło</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        placeholder="••••••••"
+      >
+    </div>
+
+    <button class="login-btn" (click)="login()">
+      Zaloguj
+    </button>
+
+    <div class="demo-info">
+      Testowe logowanie:
+      <br>
+      admin@test.com / 1234
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,51 @@
+﻿<div class="dashboard">
+  <section class="dashboard-header">
+    <div>
+      <h1>Witaj na dashboardzie</h1>
+      <p>Twoja rola: <strong>{{ userRole }}</strong></p>
+    </div>
+  </section>
+
+  <section class="stats-cards">
+    <div class="card">
+      <h3>Saldo</h3>
+      <p>12 450 PLN</p>
+    </div>
+
+    <div class="card">
+      <h3>Zysk dzienny</h3>
+      <p class="green">+2.4%</p>
+    </div>
+
+    <div class="card">
+      <h3>Transakcje</h3>
+      <p>14</p>
+    </div>
+  </section>
+
+  <section class="action-tiles">
+    <a class="tile" [routerLink]="actionTileRoute">
+      <h3>{{ actionTileLabel }}</h3>
+      <p>Przejdź do zarządzania lub edycji profilu.</p>
+    </a>
+
+    <a class="tile secondary" routerLink="/wallet">
+      <h3>Portfel</h3>
+      <p>Sprawdź saldo i transakcje.</p>
+    </a>
+  </section>
+
+  <section class="markets">
+    <div class="market-card">
+      BTC <span class="green">+4.2%</span>
+    </div>
+
+    <div class="market-card">
+      ETH <span class="green">+1.1%</span>
+    </div>
+
+    <div class="market-card">
+      TSLA <span class="red">-0.4%</span>
+    </div>
+  </section>
+</div>

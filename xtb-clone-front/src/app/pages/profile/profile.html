@@ -1,0 +1,25 @@
+﻿<div class="profile-page">
+  <header>
+    <h1>Mój profil</h1>
+    <p>Zarządzaj swoimi danymi i edytuj swój profil.</p>
+  </header>
+
+  <form class="profile-form" (ngSubmit)="saveProfile()">
+    <label>
+      Imię i nazwisko:
+      <input [(ngModel)]="profileName" name="name" />
+    </label>
+
+    <label>
+      Email:
+      <input [(ngModel)]="profileEmail" name="email" type="email" />
+    </label>
+
+    <label>
+      Rola:
+      <input [value]="role" disabled />
+    </label>
+
+    <button type="submit">Zapisz profil</button>
+  </form>
+</div>
