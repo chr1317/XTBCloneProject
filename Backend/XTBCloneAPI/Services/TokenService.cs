@@ -17,7 +17,9 @@ namespace Backend.Services
 
         public string CreateToken(User user)
         {
-            var jwtKey = _configuration["Jwt:Key"];
+            var jwtKey =
+            Environment.GetEnvironmentVariable("JWT_KEY")
+            ?? _configuration["Jwt:Key"];
             var issuer = _configuration["Jwt:Issuer"];
             var audience = _configuration["Jwt:Audience"];
 

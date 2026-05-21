@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Backend.Data;
 using DotNetEnv;
+using Backend.Hubs;
 
 
 Env.Load();
@@ -14,7 +15,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSignalR();
+builder.Services.AddHostedService<PriceUpdateService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -37,7 +39,10 @@ builder.Services.AddHttpClient<FinnhubService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY");
+        var jwtKey =
+            Environment.GetEnvironmentVariable("JWT_KEY")
+            ?? builder.Configuration["Jwt:Key"];
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -53,6 +58,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173", "http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 var app = builder.Build();
 
 await DbSeeder.SeedAsync(app.Services);
@@ -62,7 +78,7 @@ app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseCors("FrontendPolicy");
 app.MapControllers();
-
+app.MapHub<PricesHub>("/hubs/prices");
 app.Run();
