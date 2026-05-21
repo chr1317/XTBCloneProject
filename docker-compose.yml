@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: xtb_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: xtb_clone_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend_network
+
+  backend:
+    build:
+      context: ./Backend/XTBCloneAPI
+      dockerfile: Dockerfile
+    container_name: xtb_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: server=mysql;port=3306;database=xtb_clone_db;user=root;password=root
+      JWT_KEY: TO_JEST_BARDZO_DLUGI_SEKRET_DO_JWT_MINIMUM_32_ZNAKI
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY}
+    depends_on:
+      - mysql
+    networks:
+      - backend_network
+
+volumes:
+  mysql_data:
+
+networks:
+  backend_network:
+    driver: bridge

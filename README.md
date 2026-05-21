@@ -20,3 +20,11 @@ Swagger:
 ```txt
 https://localhost:xxxx/swagger
 ```
+
+Skopiuj:
+
+```bash
+cp .env.example .env
+```
+
+i uzupełnij wartości.
