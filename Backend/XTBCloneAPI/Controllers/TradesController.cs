@@ -5,12 +5,14 @@ using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Backend.Controllers
 {
     [ApiController]
     [Route("api/trades")]
     [Authorize]
+    [EnableRateLimiting("ApiPolicy")]
     public class TradesController : ControllerBase
     {
         private readonly AppDbContext _context;

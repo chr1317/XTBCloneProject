@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Backend.Controllers
 {
@@ -59,6 +60,7 @@ namespace Backend.Controllers
             });
         }
 
+        [EnableRateLimiting("LoginPolicy")]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto request)
         {
