@@ -18,7 +18,7 @@ export class Navbar {
   }
 
   get isLoggedIn(): boolean {
-    return this.auth.isLogged();
+    return this.auth.isLoggedIn();
   }
 
   get roleLabel(): string {

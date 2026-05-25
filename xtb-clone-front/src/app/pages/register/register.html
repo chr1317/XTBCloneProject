@@ -1,0 +1,51 @@
+<div class="register-container">
+
+  <div class="register-card">
+
+    <div class="logo">
+      XTB Clone
+    </div>
+
+    <div class="subtitle">
+      Załóż nowe konto
+    </div>
+
+    <div class="input-group">
+      <label>Username</label>
+      <input
+        type="text"
+        [(ngModel)]="username"
+        placeholder="jan_kowalski"
+      >
+    </div>
+
+    <div class="input-group">
+      <label>Email</label>
+      <input
+        type="email"
+        [(ngModel)]="email"
+        placeholder="test@test.com"
+      >
+    </div>
+
+    <div class="input-group">
+      <label>Hasło</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        placeholder="••••••••"
+      >
+    </div>
+
+    <button class="register-btn" (click)="register()">
+      Zarejestruj się
+    </button>
+
+    <div class="login-link">
+      Masz już konto?
+      <a routerLink="/">Zaloguj się</a>
+    </div>
+
+  </div>
+
+</div>

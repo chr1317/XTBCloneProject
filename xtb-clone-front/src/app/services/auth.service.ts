@@ -1,42 +1,63 @@
 ﻿import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
 
-  private tokenKey = 'logged';
-  private roleKey = 'userRole';
+  private apiUrl = 'http://localhost:8080/api/auth';
 
-  login(email: string, password: string): boolean {
-    if (password !== '1234') {
-      return false;
-    }
+  constructor(private http: HttpClient) {}
 
-    const role = email === 'admin@test.com' ? 'admin' : 'user';
-    localStorage.setItem(this.tokenKey, 'true');
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem(this.roleKey, role);
-    return true;
+  login(email: string, password: string): Observable<any> {
+
+    return this.http.post<any>(`${this.apiUrl}/login`, {
+      email,
+      password
+    }).pipe(
+      tap(response => {
+
+        localStorage.setItem('token', response.token);
+
+        localStorage.setItem(
+          'user',
+          JSON.stringify(response.user)
+        );
+      })
+    );
   }
 
   logout() {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem(this.roleKey);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 
-  isLogged(): boolean {
-    return localStorage.getItem(this.tokenKey) === 'true';
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
+
+  getUser() {
+    const user = localStorage.getItem('user');
+
+    return user ? JSON.parse(user) : null;
   }
 
   isAdmin(): boolean {
-    return this.getUserRole() === 'admin';
-  }
+  const user = this.getUser();
+  return user?.role === 'Admin';
+}
+getUserEmail(): string | null {
+  const user = this.getUser();
+  return user?.email ?? null;
+}
 
-  getUserEmail(): string | null {
-    return localStorage.getItem('userEmail');
-  }
-
-  getUserRole(): string {
-    return localStorage.getItem(this.roleKey) || 'user';
-  }
+register(username: string, email: string, password: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/register`, {
+    username,
+    email,
+    password
+  });
+}
 }

@@ -4,7 +4,7 @@ body {
   background: #0f172a;
 }
 
-.login-container {
+.register-container {
   height: 100vh;
   display: flex;
   justify-content: center;
@@ -16,7 +16,7 @@ body {
   background-position: center;
 }
 
-.login-card {
+.register-card {
   width: 400px;
   padding: 40px;
   border-radius: 20px;
@@ -65,7 +65,7 @@ body {
   outline: 2px solid #f43f5e;
 }
 
-.login-btn {
+.register-btn {
   width: 100%;
   padding: 14px;
   border: none;
@@ -78,30 +78,23 @@ body {
   transition: 0.2s;
 }
 
-.login-btn:hover {
+.register-btn:hover {
   background: #e11d48;
   transform: translateY(-2px);
 }
 
-.demo-info {
+.login-link {
   margin-top: 20px;
   text-align: center;
   color: #94a3b8;
   font-size: 14px;
 }
 
-.auth-links {
-  margin-top: 15px;
-  text-align: center;
-  font-size: 14px;
-  color: #94a3b8;
-}
-
-.auth-links a {
+.login-link a {
   color: #f43f5e;
   text-decoration: none;
 }
 
-.auth-links a:hover {
+.login-link a:hover {
   text-decoration: underline;
 }
