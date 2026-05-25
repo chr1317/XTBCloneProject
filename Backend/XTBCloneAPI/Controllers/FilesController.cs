@@ -75,5 +75,29 @@ namespace Backend.Controllers
                 avatarUrl = $"{Request.Scheme}://{Request.Host}{user.AvatarPath}"
             });
         }
+        [HttpGet("avatar")]
+        public async Task<IActionResult> GetMyAvatar()
+        {
+            var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userIdText == null)
+                return Unauthorized();
+
+            var userId = int.Parse(userIdText);
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            return Ok(new
+            {
+                user.AvatarPath,
+                AvatarUrl = user.AvatarPath != null
+                    ? $"{Request.Scheme}://{Request.Host}{user.AvatarPath}"
+                    : null
+            });
+        }
     }
 }
