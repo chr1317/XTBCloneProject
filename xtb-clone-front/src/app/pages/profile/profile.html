@@ -1,25 +1,101 @@
-﻿<div class="profile-page">
-  <header>
-    <h1>Mój profil</h1>
-    <p>Zarządzaj swoimi danymi i edytuj swój profil.</p>
-  </header>
+﻿<section class="profile-page">
+  <div class="profile-header">
+    <div>
+      <p class="eyebrow">Account settings</p>
+      <h1>Mój profil</h1>
+      <p>Zarządzaj danymi konta, avatarem i informacjami użytkownika.</p>
+    </div>
+  </div>
 
-  <form class="profile-form" (ngSubmit)="saveProfile()">
-    <label>
-      Imię i nazwisko:
-      <input [(ngModel)]="profileName" name="name" />
-    </label>
+  <div *ngIf="loading" class="state-card">
+    Ładowanie profilu...
+  </div>
 
-    <label>
-      Email:
-      <input [(ngModel)]="profileEmail" name="email" type="email" />
-    </label>
+  <div *ngIf="!loading && profile" class="profile-grid">
+    <div class="profile-card identity-card">
+      <div class="avatar">
+        <img
+          *ngIf="avatarPreviewUrl"
+          [src]="avatarPreviewUrl"
+          alt=""
+          (error)="onAvatarError()"
+        />
 
-    <label>
-      Rola:
-      <input [value]="role" disabled />
-    </label>
+        <span *ngIf="!avatarPreviewUrl">{{ initials }}</span>
+      </div>
 
-    <button type="submit">Zapisz profil</button>
-  </form>
-</div>
+      <h2>{{ profile.username }}</h2>
+      <p>{{ profile.email }}</p>
+
+      <div class="role-badge">
+        {{ profile.role }}
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <h2>Dane profilu</h2>
+      <p class="card-description">
+        Te dane będą widoczne w Twoim koncie użytkownika.
+      </p>
+
+      <form class="profile-form" (ngSubmit)="saveProfile()">
+        <label>
+          Nazwa użytkownika
+          <input
+            type="text"
+            name="username"
+            [(ngModel)]="username"
+            placeholder="np. maciek"
+            required
+          />
+        </label>
+
+        <label>
+          Email
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="email"
+            placeholder="np. user@example.com"
+            required
+          />
+        </label>
+
+        <button type="submit" [disabled]="saving">
+          {{ saving ? 'Zapisywanie...' : 'Zapisz zmiany' }}
+        </button>
+      </form>
+    </div>
+
+    <div class="profile-card">
+      <h2>Avatar</h2>
+      <p class="card-description">
+        Obsługiwane formaty: JPG, PNG, WEBP. Maksymalny rozmiar: 2 MB.
+      </p>
+
+      <div class="upload-box">
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          (change)="onFileSelected($event)"
+        />
+
+        <button type="button" (click)="uploadAvatar()" [disabled]="uploading">
+          {{ uploading ? 'Wysyłanie...' : 'Wyślij avatar' }}
+        </button>
+      </div>
+
+      <p *ngIf="selectedFile" class="selected-file">
+        Wybrany plik: {{ selectedFile.name }}
+      </p>
+    </div>
+  </div>
+
+  <div *ngIf="message" class="alert success">
+    {{ message }}
+  </div>
+
+  <div *ngIf="error" class="alert error">
+    {{ error }}
+  </div>
+</section>

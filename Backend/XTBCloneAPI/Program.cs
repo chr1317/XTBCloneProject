@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.FileProviders;
 using Backend.Data;
 using DotNetEnv;
 using Backend.Hubs;
@@ -114,11 +115,22 @@ await DbSeeder.SeedAsync(app.Services);
 app.UseSwagger();
 app.UseSwaggerUI();
 
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+Directory.CreateDirectory(uploadsPath);
+
+app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.UseCors("FrontendPolicy");
-app.UseStaticFiles();
+
 app.MapControllers();
 app.MapHub<PricesHub>("/hubs/prices");
 app.Run();

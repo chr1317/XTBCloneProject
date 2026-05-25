@@ -54,7 +54,12 @@ namespace Backend.Controllers
                 webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
             }
 
-            var uploadsPath = Path.Combine(webRootPath, "uploads", "avatars");
+            var uploadsPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                "avatars"
+            );
 
             Directory.CreateDirectory(uploadsPath);
 
