@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Backend.Data;
 using Backend.DTOs;
-using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +30,8 @@ namespace Backend.Controllers
             var userId = int.Parse(userIdText);
 
             var user = await _context.Users
-                .Include(u => u.Wallet)
+                .Include(u => u.Wallet!)
+                    .ThenInclude(w => w.Balances)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
@@ -44,9 +44,13 @@ namespace Backend.Controllers
                 user.Email,
                 user.Role,
                 user.AvatarPath,
-                WalletBalance = user.Wallet != null
-                    ? user.Wallet.CashBalance
-                    : 0
+                Balances = user.Wallet?.Balances
+                    .OrderBy(b => b.Currency)
+                    .Select(b => new
+                    {
+                        b.Currency,
+                        b.Amount
+                    })
             });
         }
 
@@ -72,9 +76,7 @@ namespace Backend.Controllers
             );
 
             if (emailTaken)
-            {
                 return BadRequest("Email already taken.");
-            }
 
             user.Username = request.Username;
             user.Email = request.Email;
@@ -107,7 +109,6 @@ namespace Backend.Controllers
                 return NotFound();
 
             _context.Users.Remove(user);
-
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -136,7 +137,8 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetUserById(int id)
         {
             var user = await _context.Users
-                .Include(u => u.Wallet)
+                .Include(u => u.Wallet!)
+                    .ThenInclude(w => w.Balances)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             if (user == null)
@@ -149,9 +151,13 @@ namespace Backend.Controllers
                 user.Email,
                 user.Role,
                 user.AvatarPath,
-                WalletBalance = user.Wallet != null
-                    ? user.Wallet.CashBalance
-                    : 0
+                Balances = user.Wallet?.Balances
+                    .OrderBy(b => b.Currency)
+                    .Select(b => new
+                    {
+                        b.Currency,
+                        b.Amount
+                    })
             });
         }
 
@@ -166,7 +172,6 @@ namespace Backend.Controllers
                 return NotFound();
 
             _context.Users.Remove(user);
-
             await _context.SaveChangesAsync();
 
             return NoContent();

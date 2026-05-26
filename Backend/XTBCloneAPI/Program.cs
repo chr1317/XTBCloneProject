@@ -9,7 +9,7 @@ using Microsoft.Extensions.FileProviders;
 using Backend.Data;
 using DotNetEnv;
 using Backend.Hubs;
-
+using StackExchange.Redis;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -108,6 +108,17 @@ builder.Services.AddRateLimiter(options =>
         )
     );
 });
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisConnectionString =
+        builder.Configuration["Redis:ConnectionString"]
+        ?? "localhost:6379";
+
+    return ConnectionMultiplexer.Connect(redisConnectionString);
+});
+
+builder.Services.AddHttpClient<EcbService>();
+
 var app = builder.Build();
 
 await DbSeeder.SeedAsync(app.Services);

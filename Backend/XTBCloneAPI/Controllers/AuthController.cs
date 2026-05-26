@@ -43,7 +43,12 @@ namespace Backend.Controllers
                 Role = "User",
                 Wallet = new Wallet
                 {
-                    CashBalance = 10000m
+                    Balances = new List<WalletBalance>
+                    {
+                        new WalletBalance { Currency = "USD", Amount = 10000m },
+                        new WalletBalance { Currency = "EUR", Amount = 0m },
+                        new WalletBalance { Currency = "PLN", Amount = 0m }
+                    }
                 }
             };
 
@@ -56,7 +61,7 @@ namespace Backend.Controllers
                 user.Username,
                 user.Email,
                 user.Role,
-                WalletBalance = user.Wallet.CashBalance
+                WalletBalance = user.Wallet.Balances
             });
         }
 
@@ -119,7 +124,7 @@ namespace Backend.Controllers
                 user.Username,
                 user.Email,
                 user.Role,
-                WalletBalance = user.Wallet != null ? user.Wallet.CashBalance : 0
+                WalletBalance = user.Wallet != null ? user.Wallet.Balances : new List<WalletBalance>()
             });
         }
     }

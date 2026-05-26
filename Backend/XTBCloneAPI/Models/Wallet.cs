@@ -7,12 +7,11 @@ namespace Backend.Models
 {
     public class Wallet
     {
-         public int Id { get; set; }
-
-        public decimal  CashBalance { get; set; } = 10000m;
+        public int Id { get; set; }
 
         public int UserId { get; set; }
-
         public User? User { get; set; }
+
+        public List<WalletBalance> Balances { get; set; } = new();
     }
 }

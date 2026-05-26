@@ -26,12 +26,22 @@ services:
       ConnectionStrings__DefaultConnection: server=mysql;port=3306;database=xtb_clone_db;user=root;password=root
       JWT_KEY: TO_JEST_BARDZO_DLUGI_SEKRET_DO_JWT_MINIMUM_32_ZNAKI
       FINNHUB_API_KEY: ${FINNHUB_API_KEY}
+      Redis__ConnectionString: redis:6379
     volumes:
       - uploads_data:/app/wwwroot/uploads
     depends_on:
       - mysql
     networks:
       - backend_network
+
+  redis:
+      image: redis:7-alpine
+      container_name: xtb_redis
+      restart: always
+      ports:
+        - "6379:6379"
+      networks:
+        - backend_network
 
 volumes:
   mysql_data:

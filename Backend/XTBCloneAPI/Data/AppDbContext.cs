@@ -14,6 +14,8 @@ namespace Backend.Data
         public DbSet<Trade> Trades { get; set; }
         public DbSet<Position> Positions { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletBalance> WalletBalances { get; set; }
+        public DbSet<CurrencyRate> CurrencyRates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,6 +55,20 @@ namespace Backend.Data
 
             modelBuilder.Entity<Instrument>()
                 .HasIndex(i => i.Symbol)
+                .IsUnique();
+                
+            modelBuilder.Entity<Wallet>()
+                .HasMany(w => w.Balances)
+                .WithOne(b => b.Wallet)
+                .HasForeignKey(b => b.WalletId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WalletBalance>()
+                .HasIndex(b => new { b.WalletId, b.Currency })
+                .IsUnique();
+
+            modelBuilder.Entity<CurrencyRate>()
+                .HasIndex(r => r.Currency)
                 .IsUnique();
         }
     }

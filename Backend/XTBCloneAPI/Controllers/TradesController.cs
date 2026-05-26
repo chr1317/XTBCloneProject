@@ -4,8 +4,8 @@ using Backend.DTOs;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers
 {
@@ -42,10 +42,17 @@ namespace Backend.Controllers
                 return NotFound("Instrument not found.");
 
             var wallet = await _context.Wallets
+                .Include(w => w.Balances)
                 .FirstOrDefaultAsync(w => w.UserId == userId);
 
             if (wallet == null)
                 return NotFound("Wallet not found.");
+
+            var usdBalance = wallet.Balances
+                .FirstOrDefault(b => b.Currency == "USD");
+
+            if (usdBalance == null)
+                return BadRequest("USD balance not found.");
 
             var type = request.Type.ToUpper();
             var price = instrument.CurrentPrice;
@@ -53,10 +60,10 @@ namespace Backend.Controllers
 
             if (type == "BUY")
             {
-                if (wallet.CashBalance < totalValue)
-                    return BadRequest("Insufficient funds.");
+                if (usdBalance.Amount < totalValue)
+                    return BadRequest("Insufficient USD funds.");
 
-                wallet.CashBalance -= totalValue;
+                usdBalance.Amount -= totalValue;
 
                 var position = await _context.Positions
                     .FirstOrDefaultAsync(p =>
@@ -95,13 +102,11 @@ namespace Backend.Controllers
                 if (position == null || position.Quantity < request.Quantity)
                     return BadRequest("Not enough quantity to sell.");
 
-                wallet.CashBalance += totalValue;
+                usdBalance.Amount += totalValue;
                 position.Quantity -= request.Quantity;
 
                 if (position.Quantity == 0)
-                {
                     _context.Positions.Remove(position);
-                }
             }
             else
             {
@@ -120,7 +125,6 @@ namespace Backend.Controllers
             };
 
             _context.Trades.Add(trade);
-
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -133,9 +137,14 @@ namespace Backend.Controllers
                     trade.Quantity,
                     trade.Price,
                     trade.TotalValue,
+                    Currency = "USD",
                     trade.CreatedAt
                 },
-                walletBalance = wallet.CashBalance
+                balances = wallet.Balances.Select(b => new
+                {
+                    b.Currency,
+                    b.Amount
+                })
             });
         }
 
@@ -160,6 +169,7 @@ namespace Backend.Controllers
                     t.Quantity,
                     t.Price,
                     t.TotalValue,
+                    Currency = "USD",
                     t.CreatedAt,
                     Instrument = new
                     {

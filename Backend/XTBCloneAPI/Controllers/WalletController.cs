@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using Backend.Data;
+using Backend.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Backend.DTOs;
+using Backend.Services;
+using Backend.Models;
 
 namespace Backend.Controllers
 {
@@ -13,10 +15,14 @@ namespace Backend.Controllers
     public class WalletController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly EcbService _ecbService;
 
-        public WalletController(AppDbContext context)
+        public WalletController(
+            AppDbContext context,
+            EcbService ecbService)
         {
             _context = context;
+            _ecbService = ecbService;
         }
 
         [HttpGet]
@@ -30,6 +36,7 @@ namespace Backend.Controllers
             var userId = int.Parse(userIdText);
 
             var wallet = await _context.Wallets
+                .Include(w => w.Balances)
                 .FirstOrDefaultAsync(w => w.UserId == userId);
 
             if (wallet == null)
@@ -38,9 +45,16 @@ namespace Backend.Controllers
             return Ok(new
             {
                 wallet.Id,
-                wallet.CashBalance
+                balances = wallet.Balances
+                    .OrderBy(b => b.Currency)
+                    .Select(b => new
+                    {
+                        b.Currency,
+                        b.Amount
+                    })
             });
         }
+
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit(DepositDto request)
         {
@@ -52,15 +66,36 @@ namespace Backend.Controllers
             if (request.Amount <= 0)
                 return BadRequest("Amount must be greater than 0.");
 
+            var currency = request.Currency.ToUpper();
+
+            if (!IsSupportedCurrency(currency))
+                return BadRequest("Supported currencies are: USD, EUR, PLN.");
+
             var userId = int.Parse(userIdText);
 
             var wallet = await _context.Wallets
+                .Include(w => w.Balances)
                 .FirstOrDefaultAsync(w => w.UserId == userId);
 
             if (wallet == null)
                 return NotFound("Wallet not found.");
 
-            wallet.CashBalance += request.Amount;
+            var balance = wallet.Balances
+                .FirstOrDefault(b => b.Currency == currency);
+
+            if (balance == null)
+            {
+                balance = new Models.WalletBalance
+                {
+                    WalletId = wallet.Id,
+                    Currency = currency,
+                    Amount = 0
+                };
+
+                wallet.Balances.Add(balance);
+            }
+
+            balance.Amount += request.Amount;
 
             await _context.SaveChangesAsync();
 
@@ -68,8 +103,114 @@ namespace Backend.Controllers
             {
                 message = "Deposit successful.",
                 wallet.Id,
-                wallet.CashBalance
+                depositedCurrency = currency,
+                depositedAmount = request.Amount,
+                balances = wallet.Balances
+                    .OrderBy(b => b.Currency)
+                    .Select(b => new
+                    {
+                        b.Currency,
+                        b.Amount
+                    })
             });
+        }
+
+        [HttpPost("convert")]
+        public async Task<IActionResult> ConvertCurrency(ConvertCurrencyDto request)
+        {
+            var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userIdText == null)
+                return Unauthorized();
+
+            if (request.Amount <= 0)
+                return BadRequest("Amount must be greater than 0.");
+
+            var fromCurrency = request.FromCurrency.ToUpper();
+            var toCurrency = request.ToCurrency.ToUpper();
+
+            if (fromCurrency == toCurrency)
+                return BadRequest("Currencies must be different.");
+
+            if (!IsSupportedCurrency(fromCurrency) ||
+                !IsSupportedCurrency(toCurrency))
+            {
+                return BadRequest("Supported currencies are: USD, EUR, PLN.");
+            }
+
+            var userId = int.Parse(userIdText);
+
+            var wallet = await _context.Wallets
+                .Include(w => w.Balances)
+                .FirstOrDefaultAsync(w => w.UserId == userId);
+
+            if (wallet == null)
+                return NotFound("Wallet not found.");
+
+            var fromBalance = wallet.Balances
+                .FirstOrDefault(b => b.Currency == fromCurrency);
+
+            if (fromBalance == null)
+                return BadRequest($"{fromCurrency} balance not found.");
+
+            if (fromBalance.Amount < request.Amount)
+                return BadRequest($"Insufficient {fromCurrency} funds.");
+
+            var toBalance = wallet.Balances
+                .FirstOrDefault(b => b.Currency == toCurrency);
+
+            if (toBalance == null)
+            {
+                toBalance = new WalletBalance
+                {
+                    WalletId = wallet.Id,
+                    Currency = toCurrency,
+                    Amount = 0
+                };
+
+                wallet.Balances.Add(toBalance);
+            }
+
+            var convertedAmount = await _ecbService.ConvertAsync(
+                fromCurrency,
+                toCurrency,
+                request.Amount
+            );
+
+            var rate = await _ecbService.GetConversionRateAsync(
+                fromCurrency,
+                toCurrency
+            );
+
+            fromBalance.Amount -= request.Amount;
+            toBalance.Amount += convertedAmount;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Currency converted successfully.",
+                conversion = new
+                {
+                    fromCurrency,
+                    toCurrency,
+                    fromAmount = request.Amount,
+                    convertedAmount,
+                    rate
+                },
+                balances = wallet.Balances
+                    .OrderBy(b => b.Currency)
+                    .Select(b => new
+                    {
+                        b.Currency,
+                        b.Amount
+                    })
+            });
+        }
+
+        private static bool IsSupportedCurrency(string currency)
+        {
+            return currency == "USD" || currency == "EUR" || currency == "PLN";
         }
     }
 }
