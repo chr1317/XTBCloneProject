@@ -1,6 +1,6 @@
 namespace Backend.DTOs
 {
-    public class DepositDto
+    public class WithdrawDepositDto
     {
         public string Currency { get; set; } = "USD";
 

@@ -56,7 +56,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("deposit")]
-        public async Task<IActionResult> Deposit(DepositDto request)
+        public async Task<IActionResult> Deposit(WithdrawDepositDto request)
         {
             var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -114,6 +114,59 @@ namespace Backend.Controllers
                     })
             });
         }
+        [HttpPost("withdraw")]
+        public async Task<IActionResult> Withdraw(WithdrawDepositDto request)
+        {
+            var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userIdText == null)
+                return Unauthorized();
+
+            if (request.Amount <= 0)
+                return BadRequest("Amount must be greater than 0.");
+
+            var currency = request.Currency.ToUpper();
+
+            if (!IsSupportedCurrency(currency))
+                return BadRequest("Supported currencies are: USD, EUR, PLN.");
+
+            var userId = int.Parse(userIdText);
+
+            var wallet = await _context.Wallets
+                .Include(w => w.Balances)
+                .FirstOrDefaultAsync(w => w.UserId == userId);
+
+            if (wallet == null)
+                return NotFound("Wallet not found.");
+
+            var balance = wallet.Balances
+                .FirstOrDefault(b => b.Currency == currency);
+
+            if (balance == null)
+            {
+                return BadRequest($"{currency} balance not found.");
+            }
+
+            balance.Amount -= request.Amount;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Withdrawal successful.",
+                wallet.Id,
+                withdrawnCurrency = currency,
+                withdrawnAmount = request.Amount,
+                balances = wallet.Balances
+                    .OrderBy(b => b.Currency)
+                    .Select(b => new
+                    {
+                        b.Currency,
+                        b.Amount
+                    })
+            });
+        }
+
 
         [HttpPost("convert")]
         public async Task<IActionResult> ConvertCurrency(ConvertCurrencyDto request)
