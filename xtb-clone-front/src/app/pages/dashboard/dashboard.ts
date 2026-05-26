@@ -1,27 +1,65 @@
-﻿import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css'],
+  styleUrls: ['./dashboard.css']
 })
-export class Dashboard {
-  constructor(private auth: AuthService) {}
+export class Dashboard implements OnInit {
 
-  get userRole(): string {
-    return this.auth.isAdmin() ? 'Admin' : 'User';
+  user: any;
+  wallet: any;
+
+  positions: any[] = [];
+  instruments: any[] = [];
+  trades: any[] = [];
+
+  pnl = 0;
+
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService
+  ) {}
+
+  ngOnInit() {
+    this.user = this.auth.getUser();
+
+    this.loadMe();
+    this.loadPositions();
+    this.loadInstruments();
+    this.loadTrades();
   }
 
-  get actionTileLabel(): string {
-    return this.auth.isAdmin() ? 'CRUD użytkowników' : 'Mój profil';
+  loadMe() {
+    this.http.get('http://localhost:8080/api/auth/me')
+      .subscribe(res => this.wallet = res);
   }
 
-  get actionTileRoute(): string {
-    return this.auth.isAdmin() ? '/users' : '/profile';
+  loadPositions() {
+    this.http.get<any[]>('http://localhost:8080/api/positions')
+      .subscribe(res => {
+        this.positions = res;
+        this.calculatePnL();
+      });
+  }
+
+  loadInstruments() {
+    this.http.get<any[]>('http://localhost:8080/api/instruments')
+      .subscribe(res => this.instruments = res.slice(0, 6));
+  }
+
+  loadTrades() {
+    this.http.get<any[]>('http://localhost:8080/api/trades')
+      .subscribe(res => this.trades = res.slice(0, 5));
+  }
+
+  calculatePnL() {
+    this.pnl = this.positions.reduce((sum, p) => sum + (p.pnl ?? 0), 0);
   }
 }

@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.wallet-page {
+  min-height: 100vh;
+  background: #0b1220;
+  padding: 20px;
+  color: white;
+}
+
+.wallet-card {
+  background: #111a2e;
+  padding: 30px;
+  border-radius: 16px;
+  max-width: 500px;
+}
+
+.balance {
+  font-size: 42px;
+  font-weight: 700;
+  margin: 20px 0;
+  color: #22c55e;
+}
+
+.deposit-box {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #1e293b;
+  color: white;
+}
+
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.message {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.success {
+  background: #14532d;
+  color: #22c55e;
+}
+
+.error {
+  background: #7f1d1d;
+  color: #ef4444;
+}

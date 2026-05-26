@@ -12,21 +12,23 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(email: string, password: string): Observable<any> {
-
     return this.http.post<any>(`${this.apiUrl}/login`, {
       email,
       password
     }).pipe(
       tap(response => {
-
         localStorage.setItem('token', response.token);
-
-        localStorage.setItem(
-          'user',
-          JSON.stringify(response.user)
-        );
+        localStorage.setItem('user', JSON.stringify(response.user));
       })
     );
+  }
+
+  register(username: string, email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register`, {
+      username,
+      email,
+      password
+    });
   }
 
   logout() {
@@ -40,24 +42,26 @@ export class AuthService {
 
   getUser() {
     const user = localStorage.getItem('user');
-
     return user ? JSON.parse(user) : null;
   }
 
-  isAdmin(): boolean {
-  const user = this.getUser();
-  return user?.role === 'Admin';
-}
-getUserEmail(): string | null {
-  const user = this.getUser();
-  return user?.email ?? null;
-}
+  getUserName(): string {
+    return this.getUser()?.username ?? 'Guest';
+  }
 
-register(username: string, email: string, password: string): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/register`, {
-    username,
-    email,
-    password
-  });
-}
+  getUserEmail(): string | null {
+    return this.getUser()?.email ?? null;
+  }
+
+  getUserRole(): string {
+    return this.getUser()?.role ?? 'User';
+  }
+
+  isAdmin(): boolean {
+    return this.getUserRole() === 'Admin';
+  }
+
+  getMe(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/me`);
+  }
 }

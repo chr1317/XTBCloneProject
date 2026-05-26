@@ -1,51 +1,82 @@
 ﻿<div class="dashboard">
-  <section class="dashboard-header">
-    <div>
-      <h1>Witaj na dashboardzie</h1>
-      <p>Twoja rola: <strong>{{ userRole }}</strong></p>
-    </div>
-  </section>
 
-  <section class="stats-cards">
-    <div class="card">
-      <h3>Saldo</h3>
-      <p>12 450 PLN</p>
+  <!-- GÓRNY PANEL -->
+  <div class="top-grid">
+
+    <div class="card wallet">
+      <h3>Saldo konta</h3>
+      <h1>{{ wallet?.walletBalance | number:'1.2-2' }} PLN</h1>
     </div>
 
-    <div class="card">
-      <h3>Zysk dzienny</h3>
-      <p class="green">+2.4%</p>
+    <div class="card pnl">
+      <h3>Zysk / Strata (PNL)</h3>
+      <h1 [class.positive]="pnl >= 0" [class.negative]="pnl < 0">
+        {{ pnl | number:'1.2-2' }} PLN
+      </h1>
     </div>
 
-    <div class="card">
-      <h3>Transakcje</h3>
-      <p>14</p>
+    <div class="card actions">
+      <h3>Szybkie akcje</h3>
+      <button>Wpłata</button>
+      <button>Handel</button>
     </div>
-  </section>
 
-  <section class="action-tiles">
-    <a class="tile" [routerLink]="actionTileRoute">
-      <h3>{{ actionTileLabel }}</h3>
-      <p>Przejdź do zarządzania lub edycji profilu.</p>
-    </a>
+  </div>
 
-    <a class="tile secondary" routerLink="/wallet">
+  <!-- NAWIGACJA / SKRÓTY -->
+  <div class="shortcuts">
+
+    <div class="card shortcut" routerLink="/instruments">
+      <h3>Instrumenty</h3>
+      <p>Przeglądaj dostępne rynki</p>
+    </div>
+
+    <div class="card shortcut" routerLink="/positions">
+      <h3>Pozycje</h3>
+      <p>Twoje otwarte transakcje</p>
+    </div>
+
+    <div class="card shortcut" routerLink="/wallet">
       <h3>Portfel</h3>
-      <p>Sprawdź saldo i transakcje.</p>
-    </a>
-  </section>
-
-  <section class="markets">
-    <div class="market-card">
-      BTC <span class="green">+4.2%</span>
+      <p>Wpłaty i saldo</p>
     </div>
 
-    <div class="market-card">
-      ETH <span class="green">+1.1%</span>
+  </div>
+
+  <!-- POZYCJE -->
+  <div class="card table">
+    <h3>Otwarte pozycje</h3>
+
+    <table>
+      <tr>
+        <th>Instrument</th>
+        <th>Ilość</th>
+        <th>Cena wejścia</th>
+        <th>PNL</th>
+      </tr>
+
+      <tr *ngFor="let p of positions">
+        <td>{{ p.instrument }}</td>
+        <td>{{ p.quantity }}</td>
+        <td>{{ p.entryPrice }}</td>
+        <td [class.positive]="p.pnl >= 0" [class.negative]="p.pnl < 0">
+          {{ p.pnl }}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- RYNEK -->
+  <div class="card market">
+    <h3>Rynek (podgląd)</h3>
+
+    <div class="grid">
+      <div class="instrument" *ngFor="let i of instruments">
+        <span>{{ i.symbol }}</span>
+        <span>{{ i.price }} PLN</span>
+      </div>
     </div>
 
-    <div class="market-card">
-      TSLA <span class="red">-0.4%</span>
-    </div>
-  </section>
+  </div>
+
 </div>

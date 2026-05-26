@@ -1,0 +1,43 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  background: #0b1220;
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.table {
+  background: #111a2e;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #1f2a44;
+}
+
+th {
+  color: #94a3b8;
+}
+
+.positive {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.negative {
+  color: #ef4444;
+  font-weight: 700;
+}

@@ -1,1 +1,39 @@
-<p>wallet works!</p>
+<div class="wallet-page">
+
+  <div class="wallet-card">
+
+    <h2>Portfel</h2>
+
+    <div class="balance">
+      {{ wallet?.walletBalance | number:'1.2-2' }} PLN
+    </div>
+
+    <div class="deposit-box">
+
+      <input
+        type="number"
+        [(ngModel)]="depositAmount"
+        placeholder="Kwota wpłaty"
+      >
+
+      <button
+        (click)="deposit()"
+        [disabled]="loading">
+
+        {{ loading ? 'Przetwarzanie...' : 'Wpłać' }}
+
+      </button>
+
+    </div>
+
+    <div class="message success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="message error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+  </div>
+
+</div>

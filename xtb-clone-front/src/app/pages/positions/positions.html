@@ -1,0 +1,39 @@
+<div class="page">
+
+  <div class="header">
+    <h2>Pozycje</h2>
+  </div>
+
+  <div class="table">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Instrument</th>
+          <th>Ilość</th>
+          <th>Cena wejścia</th>
+          <th>PNL</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let p of positions">
+
+          <td>{{ p.instrument }}</td>
+          <td>{{ p.quantity }}</td>
+          <td>{{ p.entryPrice | number:'1.2-2' }}</td>
+
+          <td [class.positive]="p.pnl >= 0"
+              [class.negative]="p.pnl < 0">
+            {{ p.pnl | number:'1.2-2' }}
+          </td>
+
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>

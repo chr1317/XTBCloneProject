@@ -11,24 +11,25 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./navbar.css'],
 })
 export class Navbar {
-  userName = 'Guest';
 
-  constructor(private auth: AuthService) {
-    this.updateUser();
-  }
+  constructor(private auth: AuthService) {}
 
   get isLoggedIn(): boolean {
     return this.auth.isLoggedIn();
   }
 
+  get userName(): string {
+    return this.auth.getUserName();
+  }
+
   get roleLabel(): string {
-    return this.auth.isAdmin() ? 'Admin' : 'User';
+    return this.auth.getUserRole();
   }
 
   get initials(): string {
     return this.userName
       .split(' ')
-      .map((part) => part[0] ?? '')
+      .map(p => p[0] ?? '')
       .join('')
       .toUpperCase();
   }
@@ -44,18 +45,5 @@ export class Navbar {
   logout(): void {
     this.auth.logout();
     window.location.href = '/login';
-  }
-
-  private updateUser(): void {
-    const email = this.auth.getUserEmail();
-    this.userName = email ? this.formatName(email) : 'Guest';
-  }
-
-  private formatName(email: string): string {
-    const namePart = email.split('@')[0];
-    return namePart
-      .split(/\.|_|-/)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ');
   }
 }

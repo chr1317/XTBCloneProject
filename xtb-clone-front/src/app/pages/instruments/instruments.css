@@ -1,0 +1,107 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.page {
+  width: 100%;
+  min-height: 100vh;
+  background: #0b1220;
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: #111a2e;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.card:hover {
+  background: #1a2742;
+}
+
+.card.active {
+  border: 1px solid #3b82f6;
+}
+
+.symbol {
+  font-weight: 700;
+}
+
+.name {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.price {
+  margin-top: 6px;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.price.up { color: #22c55e; }
+.price.down { color: #ef4444; }
+
+.flash-up {
+  animation: flashUp 0.4s ease;
+}
+
+.flash-down {
+  animation: flashDown 0.4s ease;
+}
+
+@keyframes flashUp {
+  0% { color: #22c55e; transform: scale(1.1); }
+  100% { color: white; transform: scale(1); }
+}
+
+@keyframes flashDown {
+  0% { color: #ef4444; transform: scale(1.1); }
+  100% { color: white; transform: scale(1); }
+}
+
+.panel {
+  background: #111a2e;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.price-big {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.buy { background: #22c55e; color: white; }
+.sell { background: #ef4444; color: white; }
