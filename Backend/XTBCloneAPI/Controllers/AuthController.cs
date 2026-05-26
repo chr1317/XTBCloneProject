@@ -51,7 +51,7 @@ public async Task<IActionResult> Register(RegisterDto request)
                 {
                     Balances = new List<WalletBalance>
                     {
-                        new WalletBalance { Currency = "USD", Amount = 10000m },
+                        new WalletBalance { Currency = "USD", Amount = 0m },
                         new WalletBalance { Currency = "EUR", Amount = 0m },
                         new WalletBalance { Currency = "PLN", Amount = 0m }
                     }
