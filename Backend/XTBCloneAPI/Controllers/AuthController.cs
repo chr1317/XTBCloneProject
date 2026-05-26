@@ -24,15 +24,21 @@ namespace Backend.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto request)
+public async Task<IActionResult> Register(RegisterDto request)
+{
+    var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email);
+
+    if (emailExists)
+        return BadRequest("User with this email already exists.");
+
+    var strategy = _context.Database.CreateExecutionStrategy();
+
+    return await strategy.ExecuteAsync(async () =>
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
         {
-            var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email);
-
-            if (emailExists)
-            {
-                return BadRequest("User with this email already exists.");
-            }
-
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             var user = new User
@@ -55,15 +61,33 @@ namespace Backend.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            await transaction.CommitAsync();
+
             return Created("api/users/" + user.Id, new
             {
                 user.Id,
                 user.Username,
                 user.Email,
                 user.Role,
-                WalletBalance = user.Wallet.Balances
+                Balances = user.Wallet.Balances.Select(b => new
+                {
+                    b.Currency,
+                    b.Amount
+                })
             });
         }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+
+            return StatusCode(500, new
+            {
+                message = "Registration failed.",
+                error = ex.Message
+            });
+        }
+    });
+}
 
         [EnableRateLimiting("LoginPolicy")]
         [HttpPost("login")]
