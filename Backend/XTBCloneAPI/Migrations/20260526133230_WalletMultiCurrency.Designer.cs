@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace XTBCloneAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260526130249_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260526133230_WalletMultiCurrency")]
+    partial class WalletMultiCurrency
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
