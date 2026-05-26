@@ -27,13 +27,13 @@ namespace Backend.Data
                 new Instrument { Symbol = "TSLA", Name = "Tesla Inc.", Type = "STOCK", CurrentPrice = 180m },
                 new Instrument { Symbol = "NVDA", Name = "NVIDIA Corporation", Type = "STOCK", CurrentPrice = 900m },
 
-                new Instrument { Symbol = "OANDA:EUR_USD", Name = "Euro / US Dollar", Type = "FOREX", CurrentPrice = 1.08m },
-                new Instrument { Symbol = "OANDA:GBP_USD", Name = "British Pound / US Dollar", Type = "FOREX", CurrentPrice = 1.27m },
-                new Instrument { Symbol = "OANDA:USD_JPY", Name = "US Dollar / Japanese Yen", Type = "FOREX", CurrentPrice = 150m },
+                new Instrument { Symbol = "AMZN", Name = "Amazon.com Inc.", Type = "STOCK", CurrentPrice = 180m },
+                new Instrument { Symbol = "META", Name = "Meta Platforms Inc.", Type = "STOCK", CurrentPrice = 500m },
+                new Instrument { Symbol = "GOOGL", Name = "Alphabet Inc.", Type = "STOCK", CurrentPrice = 170m },
 
-                new Instrument { Symbol = "BINANCE:BTCUSDT", Name = "Bitcoin / USDT", Type = "CRYPTO", CurrentPrice = 65000m },
-                new Instrument { Symbol = "BINANCE:ETHUSDT", Name = "Ethereum / USDT", Type = "CRYPTO", CurrentPrice = 3500m },
-                new Instrument { Symbol = "BINANCE:SOLUSDT", Name = "Solana / USDT", Type = "CRYPTO", CurrentPrice = 150m }
+                new Instrument { Symbol = "NFLX", Name = "Netflix Inc.", Type = "STOCK", CurrentPrice = 620m },
+                new Instrument { Symbol = "AMD", Name = "Advanced Micro Devices Inc.", Type = "STOCK", CurrentPrice = 165m },
+                new Instrument { Symbol = "INTC", Name = "Intel Corporation", Type = "STOCK", CurrentPrice = 32m }
             };
 
             foreach (var instrument in instruments)
