@@ -136,12 +136,17 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
+
+app.UseRouting();
+
 app.UseCors("FrontendPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseRateLimiter();
 
+app.MapControllers().RequireCors("FrontendPolicy");
+app.MapHub<PricesHub>("/hubs/prices").RequireCors("FrontendPolicy");
 
-app.MapControllers();
-app.MapHub<PricesHub>("/hubs/prices");
 app.Run();

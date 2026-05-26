@@ -22,6 +22,35 @@ namespace XTBCloneAPI.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Backend.Models.CurrencyRate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("RateDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("RateToEur")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Currency")
+                        .IsUnique();
+
+                    b.ToTable("CurrencyRates");
+                });
+
             modelBuilder.Entity("Backend.Models.Instrument", b =>
                 {
                     b.Property<int>("Id")
@@ -173,9 +202,6 @@ namespace XTBCloneAPI.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("CashBalance")
-                        .HasColumnType("decimal(65,30)");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -185,6 +211,32 @@ namespace XTBCloneAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("Wallets");
+                });
+
+            modelBuilder.Entity("Backend.Models.WalletBalance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("WalletId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId", "Currency")
+                        .IsUnique();
+
+                    b.ToTable("WalletBalances");
                 });
 
             modelBuilder.Entity("Backend.Models.Position", b =>
@@ -236,6 +288,17 @@ namespace XTBCloneAPI.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Backend.Models.WalletBalance", b =>
+                {
+                    b.HasOne("Backend.Models.Wallet", "Wallet")
+                        .WithMany("Balances")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Wallet");
+                });
+
             modelBuilder.Entity("Backend.Models.Instrument", b =>
                 {
                     b.Navigation("Positions");
@@ -250,6 +313,11 @@ namespace XTBCloneAPI.Migrations
                     b.Navigation("Trades");
 
                     b.Navigation("Wallet");
+                });
+
+            modelBuilder.Entity("Backend.Models.Wallet", b =>
+                {
+                    b.Navigation("Balances");
                 });
 #pragma warning restore 612, 618
         }

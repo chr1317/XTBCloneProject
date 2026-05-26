@@ -16,6 +16,24 @@ namespace XTBCloneAPI.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "CurrencyRates",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Currency = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RateToEur = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    RateDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    LastUpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CurrencyRates", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Instruments",
                 columns: table => new
                 {
@@ -129,7 +147,6 @@ namespace XTBCloneAPI.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    CashBalance = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -143,6 +160,35 @@ namespace XTBCloneAPI.Migrations
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "WalletBalances",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    WalletId = table.Column<int>(type: "int", nullable: false),
+                    Currency = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Amount = table.Column<decimal>(type: "decimal(65,30)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WalletBalances", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WalletBalances_Wallets_WalletId",
+                        column: x => x.WalletId,
+                        principalTable: "Wallets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CurrencyRates_Currency",
+                table: "CurrencyRates",
+                column: "Currency",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Instruments_Symbol",
@@ -177,6 +223,12 @@ namespace XTBCloneAPI.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_WalletBalances_WalletId_Currency",
+                table: "WalletBalances",
+                columns: new[] { "WalletId", "Currency" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Wallets_UserId",
                 table: "Wallets",
                 column: "UserId",
@@ -187,16 +239,22 @@ namespace XTBCloneAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "CurrencyRates");
+
+            migrationBuilder.DropTable(
                 name: "Positions");
 
             migrationBuilder.DropTable(
                 name: "Trades");
 
             migrationBuilder.DropTable(
-                name: "Wallets");
+                name: "WalletBalances");
 
             migrationBuilder.DropTable(
                 name: "Instruments");
+
+            migrationBuilder.DropTable(
+                name: "Wallets");
 
             migrationBuilder.DropTable(
                 name: "Users");
