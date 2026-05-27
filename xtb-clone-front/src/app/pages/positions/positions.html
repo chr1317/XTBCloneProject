@@ -4,35 +4,156 @@
     <h2>Pozycje</h2>
   </div>
 
-  <div class="table">
+  <div class="layout">
 
-    <table>
+    <!-- POZYCJE -->
+    <div class="table">
 
-      <thead>
-        <tr>
-          <th>Instrument</th>
-          <th>Ilość</th>
-          <th>Cena wejścia</th>
-          <th>PNL</th>
-        </tr>
-      </thead>
+      <table>
 
-      <tbody>
-        <tr *ngFor="let p of positions">
+        <thead>
+          <tr>
+            <th>Instrument</th>
+            <th>Ilość</th>
+            <th>Śr. cena</th>
+            <th>Aktualna</th>
+            <th>Wartość</th>
+            <th>Zysk</th>
+            <th>Akcja</th>
+          </tr>
+        </thead>
 
-          <td>{{ p.instrument }}</td>
-          <td>{{ p.quantity }}</td>
-          <td>{{ p.entryPrice | number:'1.2-2' }}</td>
+        <tbody>
 
-          <td [class.positive]="p.pnl >= 0"
-              [class.negative]="p.pnl < 0">
-            {{ p.pnl | number:'1.2-2' }}
-          </td>
+          <tr *ngFor="let p of positions">
 
-        </tr>
-      </tbody>
+            <td>
+              <div>{{ getSymbol(p) }}</div>
 
-    </table>
+              <small style="color:#94a3b8">
+                {{ getName(p) }}
+              </small>
+            </td>
+
+            <td>
+              {{ p.quantity | number:'1.0-4' }}
+            </td>
+
+            <td>
+              {{ p.averageBuyPrice | number:'1.2-2' }} USD
+            </td>
+
+            <td
+              [class.price-up]="p.profitLoss >= 0"
+              [class.price-down]="p.profitLoss < 0">
+
+              {{ p.currentPrice | number:'1.2-2' }} USD
+
+            </td>
+
+            <td>
+              {{ p.currentValue | number:'1.2-2' }} USD
+            </td>
+
+            <td
+              [class.positive]="p.profitLoss >= 0"
+              [class.negative]="p.profitLoss < 0">
+
+              {{ p.profitLoss | number:'1.2-2' }} USD
+
+            </td>
+
+            <td>
+
+              <button
+                class="close-btn"
+                (click)="closePosition(p)"
+                [disabled]="closingId === p.id">
+
+                {{
+                  closingId === p.id
+                  ? 'Zamykanie...'
+                  : 'Zamknij'
+                }}
+
+              </button>
+
+            </td>
+
+          </tr>
+
+          <tr *ngIf="positions.length === 0">
+            <td colspan="7" class="empty">
+              Brak otwartych pozycji
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- HISTORIA -->
+    <div class="trades-panel">
+
+      <h3>Historia tradeów</h3>
+
+      <div
+        class="trade-card"
+        *ngFor="let t of trades">
+
+        <div class="trade-top">
+
+          <div>
+
+            <div class="trade-symbol">
+              {{ t.instrument.symbol }}
+            </div>
+
+            <div class="trade-name">
+              {{ t.instrument.name }}
+            </div>
+
+          </div>
+
+          <div
+            class="trade-type"
+            [class.buy]="t.type === 'BUY'"
+            [class.sell]="t.type === 'SELL'">
+
+            {{ t.type }}
+
+          </div>
+
+        </div>
+
+        <div class="trade-details">
+
+          <div>
+            Ilość:
+            <b>{{ t.quantity | number:'1.0-4' }}</b>
+          </div>
+
+          <div>
+            Cena:
+            <b>{{ t.price | number:'1.2-2' }} USD</b>
+          </div>
+
+          <div>
+            Wartość:
+            <b>{{ t.totalValue | number:'1.2-2' }} USD</b>
+          </div>
+
+        </div>
+
+        <div class="trade-date">
+          {{ formatDate(t.createdAt) }}
+        </div>
+
+      </div>
+
+    </div>
 
   </div>
 

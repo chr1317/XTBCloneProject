@@ -64,6 +64,7 @@
       </div>
 
       <div class="actions">
+        <input type="number" [(ngModel)]="quantity" min="1" />
 
         <button
           class="buy"
@@ -73,13 +74,6 @@
 
         </button>
 
-        <button
-          class="sell"
-          (click)="sell()">
-
-          Sprzedaj
-
-        </button>
 
       </div>
 

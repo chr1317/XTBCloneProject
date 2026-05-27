@@ -38,7 +38,7 @@ export class WalletService {
     amount: number
   ): Observable<any> {
 
-    return this.http.post<any>(`${this.api}/deposit/convert`, {
+    return this.http.post<any>(`${this.api}/convert`, {
       fromCurrency,
       toCurrency,
       amount
