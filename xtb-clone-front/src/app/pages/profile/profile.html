@@ -75,10 +75,21 @@
 
       <div class="upload-box">
         <input
+          #fileInput
           type="file"
           accept=".jpg,.jpeg,.png,.webp"
           (change)="onFileSelected($event)"
         />
+
+        <div *ngIf="imageChangedEvent" class="cropper-box">
+          <image-cropper
+            [imageChangedEvent]="imageChangedEvent"
+            [maintainAspectRatio]="true"
+            [aspectRatio]="1 / 1"
+            format="png"
+            (imageCropped)="imageCropped($event)"
+          ></image-cropper>
+        </div>
 
         <button type="button" (click)="uploadAvatar()" [disabled]="uploading">
           {{ uploading ? 'Wysyłanie...' : 'Wyślij avatar' }}

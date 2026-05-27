@@ -214,4 +214,17 @@ button:disabled {
   .identity-card {
     grid-row: auto;
   }
+  .cropper-box {
+    margin-top: 16px;
+    max-width: 420px;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: #020617;
+  }
+
+  .cropper-box image-cropper {
+    display: block;
+    max-height: 420px;
+  }
 }
