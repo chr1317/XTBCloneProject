@@ -11,10 +11,17 @@
   margin-bottom: 20px;
 }
 
+.layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
 .table {
   background: #111a2e;
   padding: 20px;
   border-radius: 12px;
+  overflow-x: auto;
 }
 
 table {
@@ -22,14 +29,29 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
-  padding: 12px;
+th,
+td {
+  padding: 14px 12px;
   text-align: left;
   border-bottom: 1px solid #1f2a44;
 }
 
 th {
   color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.price-up {
+  color: #22c55e;
+}
+
+.price-down {
+  color: #ef4444;
 }
 
 .positive {
@@ -40,4 +62,98 @@ th {
 .negative {
   color: #ef4444;
   font-weight: 700;
+}
+
+.close-btn {
+  border: none;
+  background: #ef4444;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty {
+  text-align: center;
+  padding: 30px;
+  color: #94a3b8;
+}
+
+/* TRADES */
+
+.trades-panel {
+  background: #111a2e;
+  padding: 20px;
+  border-radius: 12px;
+
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.trades-panel h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.trade-card {
+  background: #172036;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.trade-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trade-symbol {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.trade-name {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.trade-type {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trade-type.buy {
+  background: rgba(34,197,94,0.2);
+  color: #22c55e;
+}
+
+.trade-type.sell {
+  background: rgba(239,68,68,0.2);
+  color: #ef4444;
+}
+
+.trade-details {
+  margin-top: 14px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  font-size: 14px;
+}
+
+.trade-date {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #94a3b8;
 }

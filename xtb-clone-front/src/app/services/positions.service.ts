@@ -1,40 +1,83 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, interval } from 'rxjs';
 
-export interface Position {
-  id: number;
-  instrument: string;
-  quantity: number;
-  entryPrice: number;
-  currentPrice: number;
-  pnl: number;
-}
+import { Position } from '../models/position.model';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class PositionsService {
 
-  private positionsSubject = new BehaviorSubject<Position[]>([]);
-  positions$ = this.positionsSubject.asObservable();
+  private api = 'http://localhost:8080/api/positions';
+  private tradesApi = 'http://localhost:8080/api/trades';
 
-  constructor(private http: HttpClient) {}
+  private positionsSubject =
+    new BehaviorSubject<Position[]>([]);
+
+  positions$ =
+    this.positionsSubject.asObservable();
+
+  private tradesSubject =
+    new BehaviorSubject<any[]>([]);
+
+  trades$ =
+    this.tradesSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+
+    interval(2000).subscribe(() => {
+
+      this.loadPositions();
+      this.loadTrades();
+    });
+  }
 
   loadPositions(): void {
 
-    const token = localStorage.getItem('token');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
-
-    this.http.get<Position[]>('http://localhost:8080/api/positions', { headers })
+    this.http.get<Position[]>(this.api)
       .subscribe({
+
         next: (data) => {
+
           this.positionsSubject.next(data);
         },
+
         error: (err) => {
-          console.error('POSITIONS ERROR:', err);
+
+          console.error(err);
         }
       });
+  }
+
+  loadTrades(): void {
+
+    this.http.get<any[]>(this.tradesApi)
+      .subscribe({
+
+        next: (data) => {
+
+          this.tradesSubject.next(data);
+        },
+
+        error: (err) => {
+
+          console.error(err);
+        }
+      });
+  }
+
+  closePosition(position: Position) {
+
+    return this.http.post(this.tradesApi, {
+
+      instrumentId: position.instrument.id,
+
+      type: 'SELL',
+
+      quantity: position.quantity,
+
+      allowAutoConversion: true
+    });
   }
 }

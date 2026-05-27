@@ -9,23 +9,31 @@
     <!-- LISTA -->
     <div class="list">
 
-      <div class="card"
-           *ngFor="let i of instruments; trackBy: trackById"
-           (click)="select(i)"
-           [class.active]="selected?.id === i.id">
+      <div
+        class="card"
+        *ngFor="let i of instruments; trackBy: trackById"
+        (click)="select(i)"
+        [class.active]="selected?.id === i.id">
 
-        <div class="symbol">{{ i.symbol }}</div>
-        <div class="name">{{ i.name }}</div>
+        <div class="symbol">
+          {{ i.symbol }}
+        </div>
 
-        <div class="price"
-             [ngClass]="{
-               up: i.priceUp,
-               down: i.priceDown,
-               'flash-up': i.priceUp,
-               'flash-down': i.priceDown
-             }">
+        <div class="name">
+          {{ i.name }}
+        </div>
 
-          {{ i.currentPrice | number:'1.2-2' }} PLN
+        <div
+          class="price"
+          [ngClass]="{
+            up: i.priceUp,
+            down: i.priceDown,
+            'flash-up': i.priceUp,
+            'flash-down': i.priceDown
+          }">
+
+          {{ i.currentPrice | number:'1.2-2' }} USD
+
         </div>
 
       </div>
@@ -36,15 +44,37 @@
     <div class="panel" *ngIf="selected">
 
       <h3>{{ selected.symbol }}</h3>
+
       <p>{{ selected.name }}</p>
 
       <div class="price-big">
-        {{ selected.currentPrice | number:'1.2-2' }} PLN
+        {{ selected.currentPrice | number:'1.2-2' }} USD
+      </div>
+
+      <!-- WYKRES -->
+      <div class="chart-container">
+
+        <canvas
+          baseChart
+          [data]="chartData"
+          [options]="chartOptions"
+          [type]="'line'">
+        </canvas>
+
       </div>
 
       <div class="actions">
-        <button class="buy" (click)="buy()">Kup</button>
-        <button class="sell" (click)="sell()">Sprzedaj</button>
+        <input type="number" [(ngModel)]="quantity" min="1" />
+
+        <button
+          class="buy"
+          (click)="buy()">
+
+          Kup
+
+        </button>
+
+
       </div>
 
     </div>

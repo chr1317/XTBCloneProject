@@ -1,10 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
-import { ChangeDetectorRef } from '@angular/core';
 
-import { WalletService, Wallet } from '../../services/wallet.service';
+import { finalize } from 'rxjs/operators';
+
+import {
+  WalletService,
+  Wallet,
+  Balance
+} from '../../services/wallet.service';
 
 @Component({
   selector: 'app-wallet',
@@ -17,56 +26,67 @@ export class WalletComponent implements OnInit {
 
   wallet: Wallet | null = null;
 
-  depositAmount = 0;
-
   loading = false;
 
   successMessage = '';
   errorMessage = '';
 
-  constructor(private walletService: WalletService, private cdr: ChangeDetectorRef) {
-    console.log('[Wallet] constructor');
-  }
+  depositAmount = 0;
+  depositCurrency = 'PLN';
+
+  withdrawAmount = 0;
+  withdrawCurrency = 'PLN';
+
+  convertAmount = 0;
+  fromCurrency = 'USD';
+  toCurrency = 'PLN';
+
+  currencies = ['PLN', 'USD', 'EUR'];
+
+  constructor(
+    private walletService: WalletService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    console.log('[Wallet] ngOnInit START');
     this.loadWallet();
   }
 
   loadWallet(): void {
 
-    console.log('[Wallet] loadWallet() -> REQUEST GET /wallet');
-
     this.walletService.getWallet().subscribe({
+
       next: (data) => {
 
-        console.log('[Wallet] GET wallet SUCCESS:', data);
+        console.log('WALLET:', data);
 
         this.wallet = data;
-        this.cdr.detectChanges();
 
-        console.log('[Wallet] wallet assigned:', this.wallet);
+        this.cdr.detectChanges();
       },
 
       error: (err) => {
 
-        console.error('[Wallet] GET wallet ERROR:', err);
+        console.error(err);
 
-        this.errorMessage = 'Nie udało się pobrać portfela';
-      },
-
-      complete: () => {
-        console.log('[Wallet] GET wallet COMPLETE');
+        this.errorMessage =
+          'Nie udało się pobrać portfela';
       }
     });
   }
 
+  getBalance(currency: string): number {
+
+    const balance = this.wallet?.balances.find(
+      b => b.currency === currency
+    );
+
+    return balance?.amount || 0;
+  }
+
   deposit(): void {
 
-    console.log('[Wallet] deposit CLICK', this.depositAmount);
-
     if (this.depositAmount <= 0) {
-      console.warn('[Wallet] invalid amount');
       this.errorMessage = 'Podaj poprawną kwotę';
       return;
     }
@@ -76,38 +96,121 @@ export class WalletComponent implements OnInit {
     this.successMessage = '';
     this.errorMessage = '';
 
-    console.log('[Wallet] deposit REQUEST POST /deposit');
+    this.walletService.deposit(
+      this.depositCurrency,
+      this.depositAmount
+    )
+    .pipe(
+      finalize(() => {
+        this.loading = false;
+      })
+    )
+    .subscribe({
 
-    this.walletService.deposit(this.depositAmount)
-      .pipe(
-        finalize(() => {
-          console.log('[Wallet] deposit finalize -> loading=false');
-          this.loading = false;
-        })
-      )
-      .subscribe({
+      next: () => {
 
-        next: (res) => {
-          console.log('[Wallet] deposit SUCCESS:', res);
+        this.successMessage =
+          '✔ Wpłata zakończona sukcesem';
 
-          this.successMessage = '✔ Wpłata zakończona sukcesem';
+        this.depositAmount = 0;
 
-          this.depositAmount = 0;
+        this.loadWallet();
+      },
 
-          console.log('[Wallet] refreshing wallet after deposit...');
-          this.loadWallet();
-        },
+      error: (err) => {
 
-        error: (err) => {
-          console.error('[Wallet] deposit ERROR:', err);
+        console.error(err);
 
-          this.errorMessage =
-            err?.error?.message || '❌ Błąd wpłaty';
-        },
+        this.errorMessage =
+          err?.error?.message || '❌ Błąd wpłaty';
+      }
+    });
+  }
 
-        complete: () => {
-          console.log('[Wallet] deposit COMPLETE');
-        }
-      });
+  withdraw(): void {
+
+    if (this.withdrawAmount <= 0) {
+      this.errorMessage = 'Podaj poprawną kwotę';
+      return;
+    }
+
+    this.loading = true;
+
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    this.walletService.withdraw(
+      this.withdrawCurrency,
+      this.withdrawAmount
+    )
+    .pipe(
+      finalize(() => {
+        this.loading = false;
+      })
+    )
+    .subscribe({
+
+      next: () => {
+
+        this.successMessage =
+          '✔ Wypłata zakończona sukcesem';
+
+        this.withdrawAmount = 0;
+
+        this.loadWallet();
+      },
+
+      error: (err) => {
+
+        console.error(err);
+
+        this.errorMessage =
+          err?.error?.message || '❌ Błąd wypłaty';
+      }
+    });
+  }
+
+  convert(): void {
+
+    if (this.convertAmount <= 0) {
+      this.errorMessage = 'Podaj poprawną kwotę';
+      return;
+    }
+
+    this.loading = true;
+
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    this.walletService.convert(
+      this.fromCurrency,
+      this.toCurrency,
+      this.convertAmount
+    )
+    .pipe(
+      finalize(() => {
+        this.loading = false;
+      })
+    )
+    .subscribe({
+
+      next: () => {
+
+        this.successMessage =
+          '✔ Przewalutowanie zakończone';
+
+        this.convertAmount = 0;
+
+        this.loadWallet();
+      },
+
+      error: (err) => {
+
+        console.error(err);
+
+        this.errorMessage =
+          err?.error?.message || '❌ Błąd przewalutowania';
+      }
+    });
   }
 }

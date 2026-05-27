@@ -4,34 +4,168 @@
 
     <h2>Portfel</h2>
 
-    <div class="balance">
-      {{ wallet?.walletBalance | number:'1.2-2' }} PLN
-    </div>
+    <div class="balances">
 
-    <div class="deposit-box">
+      <div
+        class="balance-box"
+        *ngFor="let balance of wallet?.balances">
 
-      <input
-        type="number"
-        [(ngModel)]="depositAmount"
-        placeholder="Kwota wpłaty"
-      >
+        <h3>{{ balance.currency }}</h3>
 
-      <button
-        (click)="deposit()"
-        [disabled]="loading">
+        <div class="amount">
+          {{ balance.amount | number:'1.2-2' }}
+        </div>
 
-        {{ loading ? 'Przetwarzanie...' : 'Wpłać' }}
-
-      </button>
+      </div>
 
     </div>
 
-    <div class="message success" *ngIf="successMessage">
+    <!-- WPŁATA -->
+
+    <div class="section">
+
+      <h3>Wpłata</h3>
+
+      <div class="action-box">
+
+        <select [(ngModel)]="depositCurrency">
+
+          <option
+            *ngFor="let c of currencies"
+            [value]="c">
+
+            {{ c }}
+
+          </option>
+
+        </select>
+
+        <input
+          type="number"
+          [(ngModel)]="depositAmount"
+          placeholder="Kwota"
+        >
+
+        <button
+          (click)="deposit()"
+          [disabled]="loading">
+
+          Wpłać
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- WYPŁATA -->
+
+    <div class="section">
+
+      <h3>Wypłata</h3>
+
+      <div class="action-box">
+
+        <select [(ngModel)]="withdrawCurrency">
+
+          <option
+            *ngFor="let c of currencies"
+            [value]="c">
+
+            {{ c }}
+
+          </option>
+
+        </select>
+
+        <input
+          type="number"
+          [(ngModel)]="withdrawAmount"
+          placeholder="Kwota"
+        >
+
+        <button
+          class="withdraw-btn"
+          (click)="withdraw()"
+          [disabled]="loading">
+
+          Wypłać
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- KONWERSJA -->
+
+    <div class="section">
+
+      <h3>Przewalutowanie</h3>
+
+      <div class="action-box">
+
+        <select [(ngModel)]="fromCurrency">
+
+          <option
+            *ngFor="let c of currencies"
+            [value]="c">
+
+            {{ c }}
+
+          </option>
+
+        </select>
+
+        <span class="arrow">→</span>
+
+        <select [(ngModel)]="toCurrency">
+
+          <option
+            *ngFor="let c of currencies"
+            [value]="c">
+
+            {{ c }}
+
+          </option>
+
+        </select>
+
+        <input
+          type="number"
+          [(ngModel)]="convertAmount"
+          placeholder="Kwota"
+        >
+
+        <button
+          class="convert-btn"
+          (click)="convert()"
+          [disabled]="loading">
+
+          Konwertuj
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- MESSAGES -->
+
+    <div
+      class="message success"
+      *ngIf="successMessage">
+
       {{ successMessage }}
+
     </div>
 
-    <div class="message error" *ngIf="errorMessage">
+    <div
+      class="message error"
+      *ngIf="errorMessage">
+
       {{ errorMessage }}
+
     </div>
 
   </div>
