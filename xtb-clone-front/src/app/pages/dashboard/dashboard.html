@@ -1,80 +1,127 @@
 ﻿<div class="dashboard">
 
-  <!-- GÓRNY PANEL -->
+  <!-- TOP STATS -->
   <div class="top-grid">
 
     <div class="card wallet">
-      <h3>Saldo konta</h3>
-      <h1>{{ wallet?.walletBalance | number:'1.2-2' }} PLN</h1>
-    </div>
-
-    <div class="card pnl">
-      <h3>Całkowity zysk z akcji</h3>
-      <h1 [class.positive]="pnl >= 0" [class.negative]="pnl < 0">
-        {{ pnl | number:'1.2-2' }} PLN
+      <h3>Saldo portfela</h3>
+      <h1>
+        {{ walletBalanceUsd | number:'1.2-2' }} USD
       </h1>
     </div>
 
-    <div class="card actions">
-      <h3>Szybkie akcje</h3>
-      <button>Wpłata</button>
-      <button>Handel</button>
+    <div class="card pnl">
+      <h3>Całkowity Zysk</h3>
+      <h1 [class.positive]="pnl >= 0" [class.negative]="pnl < 0">
+        {{ pnl | number:'1.2-2' }} USD
+      </h1>
+    </div>
+
+    <div class="card info">
+      <h3>Pozycje</h3>
+      <h1>{{ positions.length }}</h1>
     </div>
 
   </div>
 
-  <!-- NAWIGACJA / SKRÓTY -->
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- POSITIONS -->
+    <div class="card table">
+
+      <h3>Otwarte pozycje</h3>
+
+      <table>
+
+        <tr>
+          <th>Instrument</th>
+          <th>Ilość</th>
+          <th>Cena wejścia</th>
+          <th>Zysk</th>
+        </tr>
+
+        <tr *ngFor="let p of positions">
+
+          <td>
+            <b>{{ p.instrument?.symbol }}</b>
+          </td>
+
+          <td>{{ p.quantity }}</td>
+
+          <td>
+            {{ (p.averageBuyPrice ?? 0) | number:'1.2-2' }} USD
+          </td>
+
+          <td [class.positive]="p.pnl >= 0"
+              [class.negative]="p.pnl < 0">
+
+            {{ (p.pnl ?? 0) | number:'1.2-2' }} USD
+          </td>
+
+        </tr>
+
+      </table>
+
+    </div>
+
+    <!-- MARKET -->
+    <div class="card market">
+
+      <h3>Rynek</h3>
+
+      <div class="grid">
+
+        <div class="instrument" *ngFor="let i of instruments">
+
+          <div class="instrument-left">
+
+            <div class="symbol">
+              {{ i.symbol }}
+            </div>
+
+            <div class="name">
+              {{ i.name }}
+            </div>
+
+          </div>
+
+          <div
+            class="price"
+            [class.price-up]="i.trend === 'up'"
+            [class.price-down]="i.trend === 'down'">
+
+            <span *ngIf="i.trend === 'up'">▲</span>
+            <span *ngIf="i.trend === 'down'">▼</span>
+
+            {{ i.price | number:'1.2-2' }} USD
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SHORTCUTS (BOTTOM CLEAN) -->
   <div class="shortcuts">
 
     <div class="card shortcut" routerLink="/instruments">
       <h3>Instrumenty</h3>
-      <p>Przeglądaj dostępne rynki</p>
+      <p>Rynki</p>
     </div>
 
     <div class="card shortcut" routerLink="/positions">
       <h3>Pozycje</h3>
-      <p>Twoje otwarte transakcje</p>
+      <p>Transakcje</p>
     </div>
 
     <div class="card shortcut" routerLink="/wallet">
       <h3>Portfel</h3>
-      <p>Wpłaty i saldo</p>
-    </div>
-
-  </div>
-
-  <!-- POZYCJE -->
-  <div class="card table">
-    <h3>Otwarte pozycje</h3>
-
-    <table>
-      <tr>
-        <th>Instrument</th>
-        <th>Ilość</th>
-        <th>Cena wejścia</th>
-        <th>PNL</th>
-      </tr>
-
-      <tr *ngFor="let p of positions">
-        <td>{{ p.instrument }}</td>
-        <td>{{ p.quantity }}</td>
-        <td>{{ p.entryPrice }}</td>
-        <td [class.positive]="p.pnl >= 0" [class.negative]="p.pnl < 0">
-          {{ p.pnl }}
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- RYNEK -->
-  <div class="card market">
-    <h3>Rynek (podgląd)</h3>
-
-    <div class="grid">
-      <div class="instrument" *ngFor="let i of instruments">
-        <span>{{ i.symbol }}</span>
-        <span>{{ i.price }} PLN</span>
-      </div>
+      <p>Saldo</p>
     </div>
 
   </div>
