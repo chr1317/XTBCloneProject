@@ -26,3 +26,8 @@ node_modules/
 
 # Mac/Linux
 .DS_Store
+
+# Local self-signed SSL certificates
+nginx/certs/*.crt
+nginx/certs/*.key
+nginx/certs/*.pem

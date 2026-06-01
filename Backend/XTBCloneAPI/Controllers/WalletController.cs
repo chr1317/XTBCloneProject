@@ -56,99 +56,127 @@ namespace Backend.Controllers
         }
 
         [HttpGet("total")]
-public async Task<IActionResult> GetWalletTotal([FromQuery] string currency)
-{
-    var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    if (userIdText == null)
-        return Unauthorized();
-
-    if (string.IsNullOrWhiteSpace(currency))
-    {
-        return BadRequest(new
+        public async Task<IActionResult> GetWalletTotal([FromQuery] string currency)
         {
-            code = "CURRENCY_REQUIRED",
-            message = "Currency is required."
-        });
-    }
+            try
+            {
+                var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    var targetCurrency = currency.ToUpper();
+                if (userIdText == null)
+                    return Unauthorized();
 
-    if (!IsSupportedCurrency(targetCurrency))
-    {
-        return BadRequest(new
-        {
-            code = "UNSUPPORTED_CURRENCY",
-            message = "Supported currencies are: USD, EUR, PLN."
-        });
-    }
+                if (string.IsNullOrWhiteSpace(currency))
+                {
+                    return BadRequest(new
+                    {
+                        code = "CURRENCY_REQUIRED",
+                        message = "Currency is required."
+                    });
+                }
 
-    var userId = int.Parse(userIdText);
+                var targetCurrency = currency.Trim().ToUpper();
 
-    var wallet = await _context.Wallets
-        .Include(w => w.Balances)
-        .FirstOrDefaultAsync(w => w.UserId == userId);
+                if (!IsSupportedCurrency(targetCurrency))
+                {
+                    return BadRequest(new
+                    {
+                        code = "UNSUPPORTED_CURRENCY",
+                        message = "Supported currencies are: USD, EUR, PLN."
+                    });
+                }
 
-    if (wallet == null)
-    {
-        return NotFound(new
-        {
-            code = "WALLET_NOT_FOUND",
-            message = "Wallet not found."
-        });
-    }
+                var userId = int.Parse(userIdText);
 
-    var convertedBalances = new List<object>();
-    decimal totalAmount = 0;
+                var wallet = await _context.Wallets
+                    .Include(w => w.Balances)
+                    .FirstOrDefaultAsync(w => w.UserId == userId);
 
-    foreach (var balance in wallet.Balances.OrderBy(b => b.Currency))
-    {
-        var sourceCurrency = balance.Currency.ToUpper();
+                if (wallet == null)
+                {
+                    return NotFound(new
+                    {
+                        code = "WALLET_NOT_FOUND",
+                        message = "Wallet not found."
+                    });
+                }
 
-        if (!IsSupportedCurrency(sourceCurrency))
-            continue;
+                var convertedBalances = new List<object>();
+                decimal totalAmount = 0;
 
-        decimal convertedAmount;
-        decimal rate;
+                foreach (var balance in wallet.Balances.OrderBy(b => b.Currency))
+                {
+                    var sourceCurrency = balance.Currency.Trim().ToUpper();
+                    var amount = Math.Round(balance.Amount, 2);
 
-        if (sourceCurrency == targetCurrency)
-        {
-            convertedAmount = balance.Amount;
-            rate = 1m;
+                    if (!IsSupportedCurrency(sourceCurrency))
+                        continue;
+
+                    // Nie przeliczamy zerowych/ujemnych sald, bo EcbService wymaga amount > 0.
+                    // Dzięki temu PLN = 0 nie blokuje policzenia salda z EUR/USD.
+                    if (amount <= 0)
+                        continue;
+
+                    decimal convertedAmount;
+                    decimal rate;
+
+                    if (sourceCurrency == targetCurrency)
+                    {
+                        convertedAmount = amount;
+                        rate = 1m;
+                    }
+                    else
+                    {
+                        convertedAmount = await _ecbService.ConvertAsync(
+                            sourceCurrency,
+                            targetCurrency,
+                            amount
+                        );
+
+                        rate = await _ecbService.GetConversionRateAsync(
+                            sourceCurrency,
+                            targetCurrency
+                        );
+                    }
+
+                    convertedAmount = Math.Round(convertedAmount, 2);
+                    totalAmount += convertedAmount;
+
+                    convertedBalances.Add(new
+                    {
+                        currency = sourceCurrency,
+                        amount,
+                        convertedAmount,
+                        rate = Math.Round(rate, 6)
+                    });
+                }
+
+                return Ok(new
+                {
+                    currency = targetCurrency,
+                    totalAmount = Math.Round(totalAmount, 2),
+                    balances = convertedBalances
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("WALLET TOTAL ERROR:");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("INNER:");
+                    Console.WriteLine(ex.InnerException.Message);
+                }
+
+                return StatusCode(500, new
+                {
+                    code = "WALLET_TOTAL_ERROR",
+                    message = ex.Message,
+                    innerMessage = ex.InnerException?.Message
+                });
+            }
         }
-        else
-        {
-            convertedAmount = await _ecbService.ConvertAsync(
-                sourceCurrency,
-                targetCurrency,
-                balance.Amount
-            );
-
-            rate = await _ecbService.GetConversionRateAsync(
-                sourceCurrency,
-                targetCurrency
-            );
-        }
-
-        convertedAmount = Math.Round(convertedAmount, 2);
-        totalAmount += convertedAmount;
-    
-        convertedBalances.Add(new
-        {
-            currency = sourceCurrency,
-            amount = Math.Round(balance.Amount, 2),
-            convertedAmount,
-            rate = Math.Round(rate, 6)
-        });
-    }
-
-    return Ok(new
-    {
-        currency = targetCurrency,
-        totalAmount = Math.Round(totalAmount, 2),
-        balances = convertedBalances
-    });
-}
 
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit(WithdrawDepositDto request)
@@ -220,7 +248,7 @@ public async Task<IActionResult> GetWalletTotal([FromQuery] string currency)
             if (request.Amount <= 0)
                 return BadRequest("Amount must be greater than 0.");
 
-            var currency = request.Currency.ToUpper();
+            var currency = request.Currency.Trim().ToUpper();
 
             if (!IsSupportedCurrency(currency))
                 return BadRequest("Supported currencies are: USD, EUR, PLN.");
@@ -235,14 +263,24 @@ public async Task<IActionResult> GetWalletTotal([FromQuery] string currency)
                 return NotFound("Wallet not found.");
 
             var balance = wallet.Balances
-                .FirstOrDefault(b => b.Currency == currency);
+                .FirstOrDefault(b => b.Currency.Trim().ToUpper() == currency);
 
             if (balance == null)
-            {
                 return BadRequest($"{currency} balance not found.");
+
+            if (balance.Amount < request.Amount)
+            {
+                return BadRequest(new
+                {
+                    code = "INSUFFICIENT_FUNDS",
+                    message = $"Insufficient {currency} funds.",
+                    currency,
+                    availableAmount = balance.Amount,
+                    requestedAmount = request.Amount
+                });
             }
 
-            balance.Amount -= request.Amount;
+            balance.Amount = Math.Round(balance.Amount - request.Amount, 2);
 
             await _context.SaveChangesAsync();
 
@@ -356,8 +394,10 @@ public async Task<IActionResult> GetWalletTotal([FromQuery] string currency)
             });
         }
 
+
         private static bool IsSupportedCurrency(string currency)
         {
+            currency = currency.Trim().ToUpper();
             return currency == "USD" || currency == "EUR" || currency == "PLN";
         }
     }
