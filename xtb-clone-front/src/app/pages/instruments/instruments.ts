@@ -13,7 +13,12 @@ import {
   Instrument
 } from '../../services/prices-signalr.service';
 
-import { TradesService } from '../../services/trades.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import {
+  TradesService,
+  TradeRequest,
+  AutoConversionRequiredResponse
+} from '../../services/trades.service';
 
 import {
   ChartConfiguration
@@ -21,6 +26,8 @@ import {
 
 import { BaseChartDirective } from 'ng2-charts';
 
+
+import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-instruments',
   standalone: true,
@@ -37,7 +44,9 @@ export class InstrumentsComponent implements OnInit, OnDestroy {
 
   priceHistory: number[] = [];
   labelHistory: string[] = [];
-
+  conversionModalVisible = false;
+  conversionResponse: AutoConversionRequiredResponse | null = null;
+  pendingTradeRequest: TradeRequest | null = null;
   private updateScheduled = false;
 
   chartData: ChartConfiguration<'line'>['data'] = {
@@ -71,7 +80,8 @@ export class InstrumentsComponent implements OnInit, OnDestroy {
   constructor(
     private pricesService: PricesSignalRService,
     private tradesService: TradesService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -110,70 +120,162 @@ export class InstrumentsComponent implements OnInit, OnDestroy {
     this.pushPrice(i.currentPrice);
   }
 
+private handleAutoConversionRequired(
+  response: AutoConversionRequiredResponse,
+  originalRequest: TradeRequest
+): void {
+  setTimeout(() => {
+    this.conversionResponse = response;
+    this.pendingTradeRequest = originalRequest;
+    this.conversionModalVisible = true;
+    this.cdr.detectChanges();
+  });
+}
+confirmAutoConversion(): void {
+  if (!this.pendingTradeRequest) {
+    this.toastr.error('Brak danych transakcji do potwierdzenia.', 'Błąd');
+    this.closeConversionModal();
+    return;
+  }
+
+  const confirmedRequest: TradeRequest = {
+    ...this.pendingTradeRequest,
+    allowAutoConversion: true
+  };
+
+  this.tradesService.createTrade(confirmedRequest).subscribe({
+    next: (res) => {
+      this.toastr.success(
+        `Kupiono ${confirmedRequest.quantity} x ${this.selected?.symbol} z automatycznym przewalutowaniem.`,
+        'Kupno zakończone'
+      );
+
+      this.closeConversionModal();
+      console.log('TRADE OK WITH CONVERSION:', res);
+    },
+
+    error: (err: HttpErrorResponse) => {
+      this.toastr.error(
+        this.getErrorMessage(err),
+        'Błąd przewalutowania'
+      );
+
+      console.error(err);
+    }
+  });
+}
+closeConversionModal(): void {
+  this.conversionModalVisible = false;
+
+  setTimeout(() => {
+    this.conversionResponse = null;
+    this.pendingTradeRequest = null;
+    this.cdr.detectChanges();
+  });
+}
+get totalConversionToUsd(): number {
+  return this.conversionResponse?.conversionPlan
+    .reduce((sum, item) => sum + item.toAmount, 0) ?? 0;
+}
+
+private getErrorMessage(err: HttpErrorResponse): string {
+  if (typeof err.error === 'string') {
+    return err.error;
+  }
+
+  return (
+    err.error?.message ||
+    err.error?.title ||
+    err.message ||
+    'Nie udało się wykonać transakcji.'
+  );
+}
+
   private pushPrice(price: number): void {
+  const now = new Date().toLocaleTimeString();
 
-    const now = new Date().toLocaleTimeString();
+  this.priceHistory.push(price);
+  this.labelHistory.push(now);
 
-    this.priceHistory.push(price);
-    this.labelHistory.push(now);
-
-    if (this.priceHistory.length > 40) {
-      this.priceHistory.shift();
-      this.labelHistory.shift();
-    }
-
-    if (!this.updateScheduled) {
-      this.updateScheduled = true;
-
-      requestAnimationFrame(() => {
-        this.syncChart();
-        this.updateScheduled = false;
-      });
-    }
+  if (this.priceHistory.length > 40) {
+    this.priceHistory.shift();
+    this.labelHistory.shift();
   }
 
-  private syncChart(): void {
-    this.chartData = {
-      labels: [...this.labelHistory],
-      datasets: [
-        {
-          ...this.chartData.datasets[0],
-          data: [...this.priceHistory]
-        }
-      ]
-    };
-    this.cdr.markForCheck();
-  }
+  if (!this.updateScheduled) {
+    this.updateScheduled = true;
 
-  // 🔥 BUY FLOW
-  buy(): void {
-
-    if (!this.selected) return;
-
-    const allow = confirm(
-      'Brak wystarczających USD? Czy pozwolić na automatyczne przewalutowanie (PLN/EUR → USD)?'
-    );
-
-    const req = {
-      instrumentId: this.selected.id,
-      type: 'BUY' as const,
-      quantity: this.quantity || 1,
-      allowAutoConversion: allow
-    };
-
-    this.tradesService.createTrade(req).subscribe({
-      next: (res) => {
-        alert('Kupno zakończone sukcesem');
-        console.log('TRADE OK:', res);
-      },
-      error: (err) => {
-        alert('Błąd transakcji');
-        console.error(err);
-      }
+    requestAnimationFrame(() => {
+      this.syncChart();
+      this.updateScheduled = false;
     });
   }
+}
 
-  trackById(index: number, item: Instrument): number {
-    return item.id;
+trackById(index: number, instrument: Instrument): number {
+  return instrument.id;
+}
+
+private syncChart(): void {
+  this.chartData = {
+    labels: [...this.labelHistory],
+    datasets: [
+      {
+        ...this.chartData.datasets[0],
+        data: [...this.priceHistory]
+      }
+    ]
+  };
+
+  this.cdr.markForCheck();
+}
+
+ buy(): void {
+  if (!this.selected) {
+    this.toastr.warning('Najpierw wybierz instrument.', 'Brak instrumentu');
+    return;
   }
+
+  const quantity = Number(this.quantity);
+
+  if (!quantity || quantity <= 0) {
+    this.toastr.warning('Podaj ilość większą od zera.', 'Niepoprawna ilość');
+    return;
+  }
+
+  const req: TradeRequest = {
+    instrumentId: this.selected.id,
+    type: 'BUY',
+    quantity,
+    allowAutoConversion: false
+  };
+
+  this.tradesService.createTrade(req).subscribe({
+    next: (res) => {
+      this.toastr.success(
+        `Kupiono ${quantity} x ${this.selected?.symbol}.`,
+        'Kupno zakończone'
+      );
+
+      console.log('TRADE OK:', res);
+    },
+
+    error: (err: HttpErrorResponse) => {
+  console.log('STATUS:', err.status);
+  console.log('ERROR BODY:', err.error);
+
+  if (err.status === 409 && err.error?.code === 'AUTO_CONVERSION_REQUIRED') {
+    this.handleAutoConversionRequired(err.error as AutoConversionRequiredResponse, req);
+    return;
+  }
+
+  this.toastr.error(
+    this.getErrorMessage(err),
+    'Błąd transakcji'
+  );
+
+  console.error(err);
+}
+  });
+}
 }

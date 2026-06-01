@@ -80,5 +80,78 @@
     </div>
 
   </div>
+  
+</div>
+<div class="modal-backdrop" *ngIf="conversionModalVisible">
+  <div class="conversion-modal">
 
+    <div class="modal-header">
+      <div>
+        <h3>Potwierdź przewalutowanie</h3>
+        <p>
+          Brakuje środków w USD do wykonania zakupu.
+        </p>
+      </div>
+
+      <button class="modal-close" type="button" (click)="closeConversionModal()">
+        ×
+      </button>
+    </div>
+
+    <div class="trade-summary">
+      <div>
+        <span>Instrument</span>
+        <strong>{{ conversionResponse?.trade?.symbol }}</strong>
+      </div>
+
+      <div>
+        <span>Ilość</span>
+        <strong>{{ conversionResponse?.trade?.quantity }}</strong>
+      </div>
+
+      <div>
+        <span>Wartość zlecenia</span>
+        <strong>{{ conversionResponse?.trade?.totalValue | number:'1.2-2' }} USD</strong>
+      </div>
+
+      <div>
+        <span>Brakuje</span>
+          <strong class="danger">{{ conversionResponse?.missingUsd | number:'1.2-2' }} USD</strong>
+      </div>
+    </div>
+
+    <div class="conversion-list">
+      <h4>Plan przewalutowania</h4>
+
+      <div class="conversion-row" *ngFor="let item of conversionResponse?.conversionPlan || []">
+        <div>
+          <strong>
+            {{ item.fromAmount | number:'1.2-2' }} {{ item.fromCurrency }}
+          </strong>
+          <span>
+            zostanie przewalutowane na {{ item.toAmount | number:'1.2-2' }} {{ item.toCurrency }}
+          </span>
+        </div>
+
+        <div class="rate">
+          kurs: {{ item.rate | number:'1.4-6' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-note">
+      Po potwierdzeniu system wykona przewalutowanie i od razu zrealizuje zakup.
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="secondary" (click)="closeConversionModal()">
+        Anuluj
+      </button>
+
+      <button type="button" class="confirm" (click)="confirmAutoConversion()">
+        Potwierdź i kup
+      </button>
+    </div>
+
+  </div>
 </div>
