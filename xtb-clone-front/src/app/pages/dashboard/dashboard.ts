@@ -5,8 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { RouterLink } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
-
 import { WalletService, WalletCurrency, WalletTotalResponse } from '../../services/wallet.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -78,7 +78,7 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   loadPositions() {
-    this.http.get<any[]>('http://localhost:8080/api/positions').subscribe((res) => {
+    this.http.get<any[]>(`${environment.apiUrl}/positions`).subscribe((res) => {
       this.positions = (res || []).map((p) => ({
         ...p,
         pnl: p.profitLoss ?? 0,
@@ -91,7 +91,7 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   loadInstruments() {
-    this.http.get<any[]>('http://localhost:8080/api/instruments').subscribe((res) => {
+    this.http.get<any[]>(`${environment.apiUrl}/instruments`).subscribe((res) => {
       const allowed = ['AAPL', 'TSLA', 'NVDA'];
 
       this.instruments = (res || [])
@@ -121,7 +121,7 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   loadTrades() {
-    this.http.get<any[]>('http://localhost:8080/api/trades').subscribe((res) => {
+    this.http.get<any[]>(`${environment.apiUrl}/trades`).subscribe((res) => {
       this.trades = res || [];
 
       this.cdRef.detectChanges();

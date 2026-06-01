@@ -1,10 +1,19 @@
 ﻿import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
+import { ToastrService } from 'ngx-toastr';
+
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 interface UserProfile {
   id: number;
@@ -27,14 +36,16 @@ interface AvatarResponse {
   styleUrls: ['./profile.css'],
 })
 export class Profile implements OnInit {
-  private apiUrl = 'http://localhost:8080/api';
-  private backendUrl = 'http://localhost:8080';
+  private apiUrl = environment.apiUrl;
+  private backendUrl = environment.backendUrl;
 
   profile: UserProfile | null = null;
 
   username = '';
   email = '';
+
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
+
   selectedFile: File | null = null;
   avatarPreviewUrl = '';
 
@@ -42,15 +53,14 @@ export class Profile implements OnInit {
   saving = false;
   uploading = false;
 
-  message = '';
-  error = '';
-
   imageChangedEvent: Event | null = null;
   croppedAvatarBlob: Blob | null = null;
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
     private auth: AuthService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -67,8 +77,6 @@ export class Profile implements OnInit {
 
   loadProfile(): void {
     this.loading = true;
-    this.message = '';
-    this.error = '';
     this.cdr.detectChanges();
 
     this.http
@@ -79,7 +87,7 @@ export class Profile implements OnInit {
         finalize(() => {
           this.loading = false;
           this.cdr.detectChanges();
-        }),
+        })
       )
       .subscribe({
         next: (data) => {
@@ -92,8 +100,12 @@ export class Profile implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.error = 'Nie udało się pobrać profilu.';
+
           this.profile = null;
+          this.toastr.error(
+            'Nie udało się pobrać profilu.',
+            'Błąd profilu'
+          );
 
           this.cdr.detectChanges();
         },
@@ -101,13 +113,20 @@ export class Profile implements OnInit {
   }
 
   saveProfile(): void {
+    if (this.saving) {
+      return;
+    }
+
+    if (!this.username || !this.email) {
+      this.toastr.warning('Uzupełnij nazwę użytkownika i email.', 'Brak danych');
+      return;
+    }
+
     this.saving = true;
-    this.message = '';
-    this.error = '';
     this.cdr.detectChanges();
 
     this.http
-      .put(
+      .put<UserProfile>(
         `${this.apiUrl}/users/me`,
         {
           username: this.username,
@@ -115,31 +134,37 @@ export class Profile implements OnInit {
         },
         {
           headers: this.getAuthHeaders(),
-        },
+        }
       )
       .pipe(
         finalize(() => {
           this.saving = false;
           this.cdr.detectChanges();
-        }),
+        })
       )
       .subscribe({
-        next: () => {
-          this.message = 'Profil został zaktualizowany.';
+        next: (updatedUser) => {
+          this.profile = {
+            ...(this.profile ?? updatedUser),
+            username: this.username,
+            email: this.email,
+          };
 
-          if (this.profile) {
-            this.profile = {
-              ...this.profile,
-              username: this.username,
-              email: this.email,
-            };
-          }
+          this.auth.updateStoredUser({
+            username: this.username,
+            email: this.email,
+          });
 
+          this.toastr.success('Profil został zaktualizowany.', 'Sukces');
           this.cdr.detectChanges();
         },
         error: (err) => {
           console.error(err);
-          this.error = 'Nie udało się zapisać profilu.';
+
+          this.toastr.error(
+            this.getErrorMessage(err, 'Nie udało się zapisać profilu.'),
+            'Błąd profilu'
+          );
 
           this.cdr.detectChanges();
         },
@@ -162,15 +187,17 @@ export class Profile implements OnInit {
   }
 
   uploadAvatar(): void {
+    if (this.uploading) {
+      return;
+    }
+
     if (!this.selectedFile) {
-      this.error = 'Wybierz plik avatara.';
-      this.cdr.detectChanges();
+      this.toastr.warning('Wybierz plik avatara.', 'Brak pliku');
       return;
     }
 
     if (!this.croppedAvatarBlob) {
-      this.error = 'Najpierw wykadruj avatar.';
-      this.cdr.detectChanges();
+      this.toastr.warning('Najpierw wykadruj avatar.', 'Brak kadrowania');
       return;
     }
 
@@ -178,8 +205,6 @@ export class Profile implements OnInit {
     formData.append('file', this.croppedAvatarBlob, 'avatar.png');
 
     this.uploading = true;
-    this.message = '';
-    this.error = '';
     this.cdr.detectChanges();
 
     this.http
@@ -190,13 +215,11 @@ export class Profile implements OnInit {
         finalize(() => {
           this.uploading = false;
           this.cdr.detectChanges();
-        }),
+        })
       )
       .subscribe({
         next: (response) => {
-          this.message = 'Avatar został przesłany.';
           this.selectedFile = null;
-
           this.imageChangedEvent = null;
           this.croppedAvatarBlob = null;
 
@@ -210,31 +233,23 @@ export class Profile implements OnInit {
               avatarPath: response.avatarPath,
             };
           }
+
           this.auth.updateStoredUser({
             avatarPath: response.avatarPath,
           });
 
-          const storedUserRaw = localStorage.getItem('user');
-
-          if (storedUserRaw) {
-            const storedUser = JSON.parse(storedUserRaw);
-
-            const updatedUser = {
-              ...storedUser,
-              avatarPath: response.avatarPath,
-              avatarUrl: response.avatarUrl,
-            };
-
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-          }
-
           this.setAvatarFromPath(response.avatarPath);
 
+          this.toastr.success('Avatar został zaktualizowany.', 'Sukces');
           this.cdr.detectChanges();
         },
         error: (err) => {
           console.error(err);
-          this.error = 'Nie udało się przesłać avatara.';
+
+          this.toastr.error(
+            this.getErrorMessage(err, 'Nie udało się przesłać avatara.'),
+            'Błąd avatara'
+          );
 
           this.cdr.detectChanges();
         },
@@ -268,5 +283,13 @@ export class Profile implements OnInit {
       .join('')
       .substring(0, 2)
       .toUpperCase();
+  }
+
+  private getErrorMessage(err: any, fallback: string): string {
+    if (typeof err?.error === 'string') {
+      return err.error;
+    }
+
+    return err?.error?.message || err?.error?.title || err?.message || fallback;
   }
 }

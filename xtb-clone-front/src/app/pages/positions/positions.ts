@@ -1,14 +1,9 @@
-import {
-  Component,
-  OnInit,
-  ChangeDetectorRef
-} from '@angular/core';
-
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ToastrService } from 'ngx-toastr';
+import { finalize } from 'rxjs/operators';
 
-import {
-  PositionsService
-} from '../../services/positions.service';
+import { PositionsService } from '../../services/positions.service';
 
 export interface Position {
   id: number;
@@ -17,7 +12,6 @@ export interface Position {
   currentPrice: number;
   currentValue: number;
   profitLoss: number;
-
   instrument: {
     id: number;
     symbol: string;
@@ -34,7 +28,6 @@ export interface Trade {
   totalValue: number;
   currency: string;
   createdAt: string;
-
   instrument: {
     id: number;
     symbol: string;
@@ -48,36 +41,30 @@ export interface Trade {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './positions.html',
-  styleUrls: ['./positions.css']
+  styleUrls: ['./positions.css'],
 })
 export class PositionsComponent implements OnInit {
-
   positions: Position[] = [];
   trades: Trade[] = [];
-
   closingId: number | null = null;
 
   constructor(
     private positionsService: PositionsService,
-    private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
-
     this.positionsService.loadPositions();
     this.positionsService.loadTrades();
 
-    this.positionsService.positions$.subscribe(data => {
-
+    this.positionsService.positions$.subscribe((data) => {
       this.positions = [...data];
-
       this.cdRef.detectChanges();
     });
 
-    this.positionsService.trades$.subscribe(data => {
-
+    this.positionsService.trades$.subscribe((data) => {
       this.trades = [...data];
-
       this.cdRef.detectChanges();
     });
   }
@@ -91,43 +78,57 @@ export class PositionsComponent implements OnInit {
   }
 
   closePosition(p: Position): void {
+    if (this.closingId !== null) {
+      return;
+    }
 
-    const confirmed = confirm(
-      `Zamknąć pozycję ${p.instrument.symbol}?`
-    );
+    const confirmed = confirm(`Zamknąć pozycję ${p.instrument.symbol}?`);
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     this.closingId = p.id;
+    this.cdRef.detectChanges();
 
-    this.positionsService.closePosition(p)
+    this.positionsService
+      .closePosition(p)
+      .pipe(
+        finalize(() => {
+          this.closingId = null;
+          this.cdRef.detectChanges();
+        })
+      )
       .subscribe({
-
         next: () => {
+          this.toastr.success(
+            `Pozycja ${p.instrument.symbol} została zamknięta.`,
+            'Pozycja zamknięta'
+          );
 
           this.positionsService.loadPositions();
           this.positionsService.loadTrades();
-
-          this.closingId = null;
         },
-
         error: (err) => {
-
           console.error(err);
 
-          alert(
-            err?.error?.message ||
+          this.toastr.error(
+            this.getErrorMessage(err, 'Nie udało się zamknąć pozycji.'),
             'Błąd zamykania pozycji'
           );
-
-          this.closingId = null;
-        }
+        },
       });
   }
 
   formatDate(date: string): string {
+    return new Date(date).toLocaleString('pl-PL');
+  }
 
-    return new Date(date)
-      .toLocaleString('pl-PL');
+  private getErrorMessage(err: any, fallback: string): string {
+    if (typeof err?.error === 'string') {
+      return err.error;
+    }
+
+    return err?.error?.message || err?.error?.title || err?.message || fallback;
   }
 }
