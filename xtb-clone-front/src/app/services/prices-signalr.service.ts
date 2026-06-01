@@ -16,7 +16,6 @@ export interface Instrument {
 
 @Injectable({ providedIn: 'root' })
 export class PricesSignalRService {
-
   private hub!: signalR.HubConnection;
 
   private pricesSubject = new BehaviorSubject<Instrument[]>([]);
@@ -25,20 +24,18 @@ export class PricesSignalRService {
   private lastPrices = new Map<number, number>();
 
   connect(): void {
-
     this.hub = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.backendUrl}/hubs/prices`)
+      .withUrl(environment.hubUrl)
       .withAutomaticReconnect()
       .build();
 
-    this.hub.start()
+    this.hub
+      .start()
       .then(() => console.log('SignalR connected'))
-      .catch(err => console.error('SignalR error', err));
+      .catch((err) => console.error('SignalR error', err));
 
     this.hub.on('ReceivePrices', (data: Instrument[]) => {
-
-      const updated = data.map(inst => {
-
+      const updated = data.map((inst) => {
         const prev = this.lastPrices.get(inst.id);
 
         const priceUp = prev !== undefined && inst.currentPrice > prev;
@@ -49,12 +46,12 @@ export class PricesSignalRService {
         return {
           ...inst,
           priceUp,
-          priceDown
+          priceDown,
         };
       });
 
       // 🔥 KLUCZ: nowa referencja + nowy array
-      this.pricesSubject.next(updated.map(x => ({ ...x })));
+      this.pricesSubject.next(updated.map((x) => ({ ...x })));
     });
   }
 
