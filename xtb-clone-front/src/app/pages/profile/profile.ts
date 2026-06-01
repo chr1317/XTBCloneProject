@@ -4,6 +4,7 @@ import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@an
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
+import { AuthService } from '../../services/auth.service';
 
 interface UserProfile {
   id: number;
@@ -48,7 +49,8 @@ export class Profile implements OnInit {
   croppedAvatarBlob: Blob | null = null;
   constructor(
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private auth: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -77,7 +79,7 @@ export class Profile implements OnInit {
         finalize(() => {
           this.loading = false;
           this.cdr.detectChanges();
-        })
+        }),
       )
       .subscribe({
         next: (data) => {
@@ -113,13 +115,13 @@ export class Profile implements OnInit {
         },
         {
           headers: this.getAuthHeaders(),
-        }
+        },
       )
       .pipe(
         finalize(() => {
           this.saving = false;
           this.cdr.detectChanges();
-        })
+        }),
       )
       .subscribe({
         next: () => {
@@ -188,7 +190,7 @@ export class Profile implements OnInit {
         finalize(() => {
           this.uploading = false;
           this.cdr.detectChanges();
-        })
+        }),
       )
       .subscribe({
         next: (response) => {
@@ -207,6 +209,23 @@ export class Profile implements OnInit {
               ...this.profile,
               avatarPath: response.avatarPath,
             };
+          }
+          this.auth.updateStoredUser({
+            avatarPath: response.avatarPath,
+          });
+
+          const storedUserRaw = localStorage.getItem('user');
+
+          if (storedUserRaw) {
+            const storedUser = JSON.parse(storedUserRaw);
+
+            const updatedUser = {
+              ...storedUser,
+              avatarPath: response.avatarPath,
+              avatarUrl: response.avatarUrl,
+            };
+
+            localStorage.setItem('user', JSON.stringify(updatedUser));
           }
 
           this.setAvatarFromPath(response.avatarPath);

@@ -1,43 +1,71 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { finalize } from 'rxjs';
+
 import { AuthService } from '../../services/auth.service';
-import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [FormsModule, RouterLink],
   templateUrl: './login.html',
-  styleUrls: ['./login.css']
+  styleUrls: ['./login.css'],
 })
 export class Login {
-
   email = '';
   password = '';
+  loading = false;
 
   constructor(
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
-  login() {
-  this.auth.login(this.email, this.password).subscribe({
-    next: (res) => {
-      console.log('LOGIN OK:', res);
-
-      this.router.navigate(['/dashboard']);
-    },
-
-    error: (err) => {
-      console.log('LOGIN ERROR:', err);
-
-      alert(
-        err?.error?.message ||
-        err?.error ||
-        'Błędne dane'
-      );
+  login(): void {
+    if (this.loading) {
+      return;
     }
-  });
-}
+
+    if (!this.email || !this.password) {
+      this.toastr.warning('Wpisz email i hasło.', 'Brak danych');
+      return;
+    }
+
+    this.loading = true;
+    this.cdr.detectChanges();
+
+    this.auth
+      .login(this.email, this.password)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.toastr.success('Zalogowano pomyślnie.', 'Sukces');
+          this.router.navigate(['/dashboard']);
+        },
+        error: (err) => {
+          console.log('LOGIN ERROR:', err);
+
+          this.toastr.error('Nieprawidłowy email lub hasło.', 'Błąd logowania');
+
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private getErrorMessage(err: any, fallback: string): string {
+    if (typeof err?.error === 'string') {
+      return err.error;
+    }
+
+    return err?.error?.message || err?.error?.title || err?.message || fallback;
+  }
 }

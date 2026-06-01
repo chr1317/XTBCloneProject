@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Instrument {
   id: number;
@@ -26,7 +27,7 @@ export class PricesSignalRService {
   connect(): void {
 
     this.hub = new signalR.HubConnectionBuilder()
-      .withUrl('http://localhost:8080/hubs/prices')
+      .withUrl(`${environment.backendUrl}/hubs/prices`)
       .withAutomaticReconnect()
       .build();
 

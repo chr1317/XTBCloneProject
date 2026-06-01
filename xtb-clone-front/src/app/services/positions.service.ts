@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, interval } from 'rxjs';
-
 import { Position } from '../models/position.model';
-
+import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
 export class PositionsService {
 
-  private api = 'http://localhost:8080/api/positions';
-  private tradesApi = 'http://localhost:8080/api/trades';
+  private api = `${environment.apiUrl}/positions`;
+  private tradesApi = `${environment.apiUrl}/trades`;
 
   private positionsSubject =
     new BehaviorSubject<Position[]>([]);

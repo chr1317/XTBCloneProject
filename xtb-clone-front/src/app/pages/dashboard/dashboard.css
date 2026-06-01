@@ -127,3 +127,28 @@ th {
   color: #ef4444;
   font-weight: 600;
 }
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-header h3 {
+  margin: 0;
+}
+
+.currency-select {
+  background: #0f172a;
+  color: white;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.currency-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}

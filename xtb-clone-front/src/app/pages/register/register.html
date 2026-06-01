@@ -1,7 +1,5 @@
 <div class="register-container">
-
   <div class="register-card">
-
     <div class="logo">
       XTB Clone
     </div>
@@ -10,42 +8,51 @@
       Załóż nowe konto
     </div>
 
-    <div class="input-group">
-      <label>Username</label>
-      <input
-        type="text"
-        [(ngModel)]="username"
-        placeholder="jan_kowalski"
-      >
-    </div>
+    <form (ngSubmit)="register()">
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          [(ngModel)]="username"
+          placeholder="jan_kowalski"
+          autocomplete="username"
+        />
+      </div>
 
-    <div class="input-group">
-      <label>Email</label>
-      <input
-        type="email"
-        [(ngModel)]="email"
-        placeholder="test@test.com"
-      >
-    </div>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          [(ngModel)]="email"
+          placeholder="test@test.com"
+          autocomplete="email"
+        />
+      </div>
 
-    <div class="input-group">
-      <label>Hasło</label>
-      <input
-        type="password"
-        [(ngModel)]="password"
-        placeholder="••••••••"
-      >
-    </div>
+      <div class="input-group">
+        <label for="password">Hasło</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          autocomplete="new-password"
+        />
+      </div>
 
-    <button class="register-btn" (click)="register()">
-      Zarejestruj się
-    </button>
+      <button class="register-btn" type="submit" [disabled]="loading">
+        {{ loading ? 'Tworzenie konta...' : 'Zarejestruj się' }}
+      </button>
+    </form>
 
     <div class="login-link">
       Masz już konto?
-      <a routerLink="/">Zaloguj się</a>
+      <a routerLink="/login">Zaloguj się</a>
     </div>
-
   </div>
-
 </div>

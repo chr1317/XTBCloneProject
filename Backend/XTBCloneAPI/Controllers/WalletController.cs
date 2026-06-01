@@ -55,6 +55,101 @@ namespace Backend.Controllers
             });
         }
 
+        [HttpGet("total")]
+public async Task<IActionResult> GetWalletTotal([FromQuery] string currency)
+{
+    var userIdText = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (userIdText == null)
+        return Unauthorized();
+
+    if (string.IsNullOrWhiteSpace(currency))
+    {
+        return BadRequest(new
+        {
+            code = "CURRENCY_REQUIRED",
+            message = "Currency is required."
+        });
+    }
+
+    var targetCurrency = currency.ToUpper();
+
+    if (!IsSupportedCurrency(targetCurrency))
+    {
+        return BadRequest(new
+        {
+            code = "UNSUPPORTED_CURRENCY",
+            message = "Supported currencies are: USD, EUR, PLN."
+        });
+    }
+
+    var userId = int.Parse(userIdText);
+
+    var wallet = await _context.Wallets
+        .Include(w => w.Balances)
+        .FirstOrDefaultAsync(w => w.UserId == userId);
+
+    if (wallet == null)
+    {
+        return NotFound(new
+        {
+            code = "WALLET_NOT_FOUND",
+            message = "Wallet not found."
+        });
+    }
+
+    var convertedBalances = new List<object>();
+    decimal totalAmount = 0;
+
+    foreach (var balance in wallet.Balances.OrderBy(b => b.Currency))
+    {
+        var sourceCurrency = balance.Currency.ToUpper();
+
+        if (!IsSupportedCurrency(sourceCurrency))
+            continue;
+
+        decimal convertedAmount;
+        decimal rate;
+
+        if (sourceCurrency == targetCurrency)
+        {
+            convertedAmount = balance.Amount;
+            rate = 1m;
+        }
+        else
+        {
+            convertedAmount = await _ecbService.ConvertAsync(
+                sourceCurrency,
+                targetCurrency,
+                balance.Amount
+            );
+
+            rate = await _ecbService.GetConversionRateAsync(
+                sourceCurrency,
+                targetCurrency
+            );
+        }
+
+        convertedAmount = Math.Round(convertedAmount, 2);
+        totalAmount += convertedAmount;
+    
+        convertedBalances.Add(new
+        {
+            currency = sourceCurrency,
+            amount = Math.Round(balance.Amount, 2),
+            convertedAmount,
+            rate = Math.Round(rate, 6)
+        });
+    }
+
+    return Ok(new
+    {
+        currency = targetCurrency,
+        totalAmount = Math.Round(totalAmount, 2),
+        balances = convertedBalances
+    });
+}
+
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit(WithdrawDepositDto request)
         {

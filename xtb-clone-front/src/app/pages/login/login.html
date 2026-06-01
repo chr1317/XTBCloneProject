@@ -1,41 +1,29 @@
 <div class="login-container">
-
   <div class="login-card">
+    <div class="logo">XTB Clone</div>
 
-    <div class="logo">
-      XTB Clone
-    </div>
-
-    <div class="subtitle">
-      Platforma tradingowa
-    </div>
+    <div class="subtitle">Platforma tradingowa</div>
 
     <div class="input-group">
       <label>Email</label>
-      <input
-        type="email"
-        [(ngModel)]="email"
-        placeholder="admin@test.com"
-      >
+      <input type="email" [(ngModel)]="email" placeholder="admin@test.com" />
     </div>
 
     <div class="input-group">
       <label>Hasło</label>
-      <input
-        type="password"
-        [(ngModel)]="password"
-        placeholder="••••••••"
-      >
+      <input type="password" [(ngModel)]="password" placeholder="••••••••" />
     </div>
 
-    <button class="login-btn" (click)="login()">
-      Zaloguj
-    </button>
+    <form (ngSubmit)="login()">
+      <!-- inputy -->
+
+      <button type="submit" class="login-btn" [disabled]="loading">
+        {{ loading ? 'Logowanie...' : 'Zaloguj się' }}
+      </button>
+    </form>
 
     <div class="auth-links">
       <a routerLink="/register">Nie masz konta? Zarejestruj się</a>
     </div>
-
   </div>
-
 </div>

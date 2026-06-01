@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface TradeRequest {
   instrumentId: number;
@@ -38,7 +39,7 @@ export interface AutoConversionRequiredResponse {
   providedIn: 'root'
 })
 export class TradesService {
-  private api = 'http://localhost:8080/api/trades';
+  private api = `${environment.apiUrl}/trades`;
 
   constructor(private http: HttpClient) {}
 
